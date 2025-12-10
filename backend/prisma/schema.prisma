@@ -187,6 +187,22 @@ model vouchers {
   usuarios_vouchers_confirmado_por_idTousuarios usuarios? @relation("vouchers_confirmado_por_idTousuarios", fields: [confirmado_por_id], references: [id])
   usuarios_vouchers_creado_por_idTousuarios     usuarios  @relation("vouchers_creado_por_idTousuarios", fields: [creado_por_id], references: [id])
   sucursales                                     sucursales @relation(fields: [sucursal_id], references: [id])
-
+  voucher_transacciones voucher_transacciones[]
   @@index([sucursal_id, fecha_operacion], map: "idx_vouchers_sucursal_fecha")
+}
+model voucher_transacciones {
+  id              BigInt   @id @default(autoincrement())
+  voucher_id      BigInt
+  franquicia      String?  @db.VarChar(20)    // Visa / Mastercard / desconocido
+  ultimos_digitos String?  @db.VarChar(10)    // Ej: "8047"
+  numero_recibo   String?  @db.VarChar(50)    // Ej: "001041"
+  monto           Decimal  @db.Decimal(14, 2) // Siempre > 0
+  linea_ocr       String?  @db.Text           // Línea original OCR para debugging
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  vouchers        vouchers @relation(fields: [voucher_id], references: [id], onDelete: Cascade)
+
+  @@index([voucher_id], map: "idx_voucher_transacciones_voucher")
+  @@index([ultimos_digitos], map: "idx_voucher_transacciones_digitos")
+  @@index([numero_recibo], map: "idx_voucher_transacciones_recibo")
 }
