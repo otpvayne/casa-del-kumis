@@ -1,27 +1,29 @@
+// backend/src/auth/auth.controller.ts
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import type { AuthResponse } from './auth.service';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
+import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // Solo para desarrollo, luego se puede proteger para que solo PROPIETARIO cree usuarios
   @Post('register')
-  async register(@Body() dto: RegisterUserDto) {
+  register(@Body() dto: RegisterUserDto): Promise<AuthResponse> {
     return this.authService.register(dto);
   }
 
   @Post('login')
-  async login(@Body() dto: LoginDto) {
+  login(@Body() dto: LoginDto): Promise<AuthResponse> {
     return this.authService.login(dto);
   }
 
+  // Endpoint protegido para probar el JWT
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async me(@Req() req: any) {
-    return this.authService.me(BigInt(req.user.userId));
+  getProfile(@Req() req: { user: any }) {
+    return req.user; // viene del validate() de JwtStrategy
   }
 }

@@ -1,23 +1,34 @@
+// backend/src/auth/jwt.strategy.ts
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import type { Request } from 'express';
+import { Rol } from '@prisma/client';
+
+export interface JwtPayload {
+  sub: number; // id del usuario
+  email: string;
+  rol: Rol;
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
+    // Tipamos la función que extrae el JWT del header
+    const jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken() as (
+      req: Request,
+    ) => string | null;
+
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest,
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'casa-del-kumis-dev-secret',
+      secretOrKey: process.env.JWT_SECRET ?? 'dev_secret_kumis',
     });
   }
 
-  async validate(payload: any) {
-    // Esto es lo que Nest inyecta como req.user
-    return {
-      userId: payload.sub,
-      email: payload.email,
-      rol: payload.rol,
-    };
+  // No hace falta que sea async si no hay await
+  validate(payload: JwtPayload): JwtPayload {
+    // Esto es lo que termina en req.user
+    return payload;
   }
 }
