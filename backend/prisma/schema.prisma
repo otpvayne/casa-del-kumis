@@ -1,12 +1,12 @@
 generator client {
   provider = "prisma-client-js"
-  
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 enum Rol {
   PROPIETARIO
   OPERATIVO
@@ -15,62 +15,88 @@ enum Rol {
   SOPORTE
 }
 
+enum Franquicia {
+  VISA
+  MASTERCARD
+  DESCONOCIDA
+}
+
+enum EstadoConciliacionTx {
+  MATCH_OK
+  ABONO_DIA_SIGUIENTE
+  NO_ABONADO
+  VALOR_DIFERENTE
+  COMISION_INCORRECTA
+  PENDIENTE_REVISION
+  SIN_VOUCHER
+  SIN_BANCO
+}
+
+enum TipoTarjetaBanco {
+  CREDIT
+  DEBIT
+  DESCONOCIDO
+}
+
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model archivos_banco {
-  id              BigInt            @id @default(autoincrement())
-  fecha_archivo   DateTime          @db.Date
-  nombre_original String            @db.VarChar(255)
-  ruta_archivo    String            @db.VarChar(255)
-  hash_contenido  String            @unique @db.VarChar(100)
-  estado          String            @db.VarChar(20)
+  id              BigInt   @id @default(autoincrement())
+  fecha_archivo   DateTime @db.Date
+  nombre_original String   @db.VarChar(255)
+  ruta_archivo    String   @db.VarChar(255)
+  hash_contenido  String   @unique @db.VarChar(100)
+  estado          String   @db.VarChar(20)
   usuario_id      BigInt
-  created_at      DateTime          @default(now()) @db.Timestamptz(6)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
 
-  usuarios        usuarios          @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  conciliaciones  conciliaciones[]
-  registros_banco registros_banco[]
+  usuarios                usuarios                  @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  conciliaciones          conciliaciones[]
+  registros_banco         registros_banco[]
+  registros_banco_detalle registros_banco_detalle[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model archivos_redeban {
-  id                 BigInt              @id @default(autoincrement())
-  fecha_conciliacion DateTime            @db.Date
-  nombre_original    String              @db.VarChar(255)
-  ruta_archivo       String              @db.VarChar(255)
-  hash_contenido     String              @unique @db.VarChar(100)
-  estado             String              @db.VarChar(20)
+  id                 BigInt   @id @default(autoincrement())
+  fecha_conciliacion DateTime @db.Date
+  nombre_original    String   @db.VarChar(255)
+  ruta_archivo       String   @db.VarChar(255)
+  hash_contenido     String   @unique @db.VarChar(100)
+  estado             String   @db.VarChar(20)
   usuario_id         BigInt
-  created_at         DateTime            @default(now()) @db.Timestamptz(6)
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
 
-  usuarios           usuarios            @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  conciliaciones     conciliaciones[]
-  registros_redeban  registros_redeban[]
+  usuarios          usuarios            @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  conciliaciones    conciliaciones[]
+  registros_redeban registros_redeban[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model conciliaciones {
-  id                       BigInt            @id @default(autoincrement())
+  id                       BigInt   @id @default(autoincrement())
   sucursal_id              BigInt
-  fecha_ventas             DateTime          @db.Date
+  fecha_ventas             DateTime @db.Date
   voucher_id               BigInt?
   archivo_redeban_id       BigInt?
   archivo_banco_id         BigInt?
-  estado                   String            @db.VarChar(30)
-  total_visa_voucher       Decimal?          @db.Decimal(14, 2)
-  total_mc_voucher         Decimal?          @db.Decimal(14, 2)
-  total_global_voucher     Decimal?          @db.Decimal(14, 2)
-  base_liquidacion_redeban Decimal?          @db.Decimal(14, 2)
-  total_banco_ajustado     Decimal?          @db.Decimal(14, 2)
-  comision_esperada        Decimal?          @db.Decimal(14, 2)
-  diferencia_calculada     Decimal?          @db.Decimal(14, 2)
-  margen_permitido         Decimal?          @db.Decimal(14, 2)
-  causa_principal          String?           @db.VarChar(255)
-  created_at               DateTime          @default(now()) @db.Timestamptz(6)
+  estado                   String   @db.VarChar(30)
+  total_visa_voucher       Decimal? @db.Decimal(14, 2)
+  total_mc_voucher         Decimal? @db.Decimal(14, 2)
+  total_global_voucher     Decimal? @db.Decimal(14, 2)
+  base_liquidacion_redeban Decimal? @db.Decimal(14, 2)
+  total_banco_ajustado     Decimal? @db.Decimal(14, 2)
+  comision_esperada        Decimal? @db.Decimal(14, 2)
+  diferencia_calculada     Decimal? @db.Decimal(14, 2)
+  margen_permitido         Decimal? @db.Decimal(14, 2)
+  causa_principal          String?  @db.VarChar(255)
+  created_at               DateTime @default(now()) @db.Timestamptz(6)
 
-  archivos_banco     archivos_banco?   @relation(fields: [archivo_banco_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  archivos_redeban   archivos_redeban? @relation(fields: [archivo_redeban_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  sucursales         sucursales        @relation(fields: [sucursal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  vouchers           vouchers?         @relation(fields: [voucher_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  archivos_banco   archivos_banco?   @relation(fields: [archivo_banco_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  archivos_redeban archivos_redeban? @relation(fields: [archivo_redeban_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sucursales       sucursales        @relation(fields: [sucursal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vouchers         vouchers?         @relation(fields: [voucher_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  conciliacion_transacciones conciliacion_transacciones[]
 
   @@unique([sucursal_id, fecha_ventas], map: "idx_conc_sucursal_fecha")
 }
@@ -100,17 +126,17 @@ model parametros_sistema {
 }
 
 model registros_banco {
-  id                  BigInt         @id @default(autoincrement())
+  id                  BigInt   @id @default(autoincrement())
   archivo_banco_id    BigInt
-  fecha_sistema       DateTime       @db.Date
-  documento           String?        @db.VarChar(50)
-  descripcion_motivo  String?        @db.VarChar(255)
-  valor_total         Decimal        @db.Decimal(14, 2)
-  referencia1         String?        @db.VarChar(50)
-  referencia2         String?        @db.VarChar(50)
-  es_abono_visa       Boolean        @default(false)
-  es_abono_mastercard Boolean        @default(false)
-  es_abono_tardio     Boolean        @default(false)
+  fecha_sistema       DateTime @db.Date
+  documento           String?  @db.VarChar(50)
+  descripcion_motivo  String?  @db.VarChar(255)
+  valor_total         Decimal  @db.Decimal(14, 2)
+  referencia1         String?  @db.VarChar(50)
+  referencia2         String?  @db.VarChar(50)
+  es_abono_visa       Boolean  @default(false)
+  es_abono_mastercard Boolean  @default(false)
+  es_abono_tardio     Boolean  @default(false)
 
   archivos_banco archivos_banco @relation(fields: [archivo_banco_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
@@ -118,19 +144,73 @@ model registros_banco {
   @@index([referencia1], map: "idx_reg_banco_referencia1")
 }
 
+model registros_banco_detalle {
+  id               BigInt  @id @default(autoincrement())
+  archivo_banco_id BigInt
+  sucursal_id      BigInt?
+
+  // Fechas del Excel del banco
+  fecha_vale    DateTime? @db.Date
+  fecha_proceso DateTime? @db.Date
+  fecha_abono   DateTime? @db.Date
+
+  // Identificadores banco
+  bol_ruta String? @db.VarChar(50)
+  recap    String? @db.VarChar(50)
+  vale     String? @db.VarChar(50)
+  red      String? @db.VarChar(50)
+
+  terminal        String? @db.VarChar(50)
+  numero_autoriza String? @db.VarChar(50)
+
+  // Valores
+  valor_consumo  Decimal? @db.Decimal(14, 2)
+  valor_iva      Decimal? @db.Decimal(14, 2)
+  imp_al_consumo Decimal? @db.Decimal(14, 2)
+  valor_propina  Decimal? @db.Decimal(14, 2)
+  valor_comision Decimal? @db.Decimal(14, 2)
+  ret_fuente     Decimal? @db.Decimal(14, 2)
+  ret_iva        Decimal? @db.Decimal(14, 2)
+  ret_ica        Decimal? @db.Decimal(14, 2)
+  valor_neto     Decimal? @db.Decimal(14, 2)
+  bases_dev_iva  Decimal? @db.Decimal(14, 2)
+
+  hora_trans String? @db.VarChar(20)
+
+  // Tarjeta
+  tarjeta_socio String?          @db.VarChar(30) // ej: ******8544
+  franquicia    Franquicia       @default(DESCONOCIDA)
+  tipo_tarjeta  TipoTarjetaBanco @default(DESCONOCIDO)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  archivos_banco archivos_banco @relation(fields: [archivo_banco_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sucursales     sucursales?    @relation(fields: [sucursal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  conciliacion_transacciones conciliacion_transacciones[]
+
+  @@index([archivo_banco_id], map: "idx_banco_det_archivo")
+  @@index([sucursal_id], map: "idx_banco_det_sucursal")
+  @@index([fecha_vale], map: "idx_banco_det_fecha_vale")
+  @@index([fecha_abono], map: "idx_banco_det_fecha_abono")
+  @@index([terminal], map: "idx_banco_det_terminal")
+  @@index([numero_autoriza], map: "idx_banco_det_autoriza")
+  @@index([tarjeta_socio], map: "idx_banco_det_tarjeta")
+}
+
 model registros_redeban {
-  id                     BigInt           @id @default(autoincrement())
+  id                     BigInt   @id @default(autoincrement())
   archivo_redeban_id     BigInt
   sucursal_id            BigInt?
-  codigo_comercio        String           @db.VarChar(50)
+  codigo_comercio        String   @db.VarChar(50)
   cantidad_transacciones Int?
-  valor_bruto            Decimal?         @db.Decimal(14, 2)
-  base_liquidacion       Decimal?         @db.Decimal(14, 2)
-  iva                    Decimal?         @db.Decimal(14, 2)
-  consumo                Decimal?         @db.Decimal(14, 2)
-  comision               Decimal?         @db.Decimal(14, 2)
-  rete_iva               Decimal?         @db.Decimal(14, 2)
-  rete_ica               Decimal?         @db.Decimal(14, 2)
+  valor_bruto            Decimal? @db.Decimal(14, 2)
+  base_liquidacion       Decimal? @db.Decimal(14, 2)
+  iva                    Decimal? @db.Decimal(14, 2)
+  consumo                Decimal? @db.Decimal(14, 2)
+  comision               Decimal? @db.Decimal(14, 2)
+  rete_iva               Decimal? @db.Decimal(14, 2)
+  rete_ica               Decimal? @db.Decimal(14, 2)
 
   archivos_redeban archivos_redeban @relation(fields: [archivo_redeban_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   sucursales       sucursales?      @relation(fields: [sucursal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -141,17 +221,19 @@ model registros_redeban {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model sucursales {
-  id                      BigInt              @id @default(autoincrement())
-  nombre                  String              @db.VarChar(150)
-  codigo_comercio_redeban String              @unique @db.VarChar(50)
-  codigo_referencia_banco String              @unique @db.VarChar(50)
-  direccion               String?             @db.VarChar(255)
-  estado                  String              @db.VarChar(20)
-  created_at              DateTime            @default(now()) @db.Timestamptz(6)
+  id                      BigInt   @id @default(autoincrement())
+  nombre                  String   @db.VarChar(150)
+  codigo_comercio_redeban String   @unique @db.VarChar(50)
+  codigo_referencia_banco String   @unique @db.VarChar(50)
+  direccion               String?  @db.VarChar(255)
+  estado                  String   @db.VarChar(20)
+  created_at              DateTime @default(now()) @db.Timestamptz(6)
 
-  conciliaciones    conciliaciones[]
-  registros_redeban registros_redeban[]
-  vouchers          vouchers[]
+  conciliaciones             conciliaciones[]
+  registros_redeban          registros_redeban[]
+  vouchers                   vouchers[]
+  registros_banco_detalle    registros_banco_detalle[]
+  conciliacion_transacciones conciliacion_transacciones[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -191,25 +273,89 @@ model vouchers {
   // Relaciones
   conciliaciones conciliaciones[]
 
-  usuarios_vouchers_confirmado_por_idTousuarios usuarios? @relation("vouchers_confirmado_por_idTousuarios", fields: [confirmado_por_id], references: [id])
-  usuarios_vouchers_creado_por_idTousuarios     usuarios  @relation("vouchers_creado_por_idTousuarios", fields: [creado_por_id], references: [id])
-  sucursales                                     sucursales @relation(fields: [sucursal_id], references: [id])
-  voucher_transacciones voucher_transacciones[]
+  usuarios_vouchers_confirmado_por_idTousuarios usuarios?               @relation("vouchers_confirmado_por_idTousuarios", fields: [confirmado_por_id], references: [id])
+  usuarios_vouchers_creado_por_idTousuarios     usuarios                @relation("vouchers_creado_por_idTousuarios", fields: [creado_por_id], references: [id])
+  sucursales                                    sucursales              @relation(fields: [sucursal_id], references: [id])
+  voucher_transacciones                         voucher_transacciones[]
+
   @@index([sucursal_id, fecha_operacion], map: "idx_vouchers_sucursal_fecha")
 }
-model voucher_transacciones {
-  id              BigInt   @id @default(autoincrement())
-  voucher_id      BigInt
-  franquicia      String?  @db.VarChar(20)    // Visa / Mastercard / desconocido
-  ultimos_digitos String?  @db.VarChar(10)    // Ej: "8047"
-  numero_recibo   String?  @db.VarChar(50)    // Ej: "001041"
-  monto           Decimal  @db.Decimal(14, 2) // Siempre > 0
-  linea_ocr       String?  @db.Text           // Línea original OCR para debugging
-  created_at      DateTime @default(now()) @db.Timestamptz(6)
 
-  vouchers        vouchers @relation(fields: [voucher_id], references: [id], onDelete: Cascade)
+model voucher_transacciones {
+  id              BigInt     @id @default(autoincrement())
+  voucher_id      BigInt
+  franquicia      Franquicia @default(DESCONOCIDA) // Visa / Mastercard / desconocido
+  ultimos_digitos String?    @db.VarChar(10) // Ej: "8047"
+  numero_recibo   String?    @db.VarChar(50) // Ej: "001041"
+  monto           Decimal    @db.Decimal(14, 2) // Siempre > 0
+  linea_ocr       String?    @db.Text // Línea original OCR para debugging
+  created_at      DateTime   @default(now()) @db.Timestamptz(6)
+
+  vouchers vouchers @relation(fields: [voucher_id], references: [id], onDelete: Cascade)
+
+  conciliacion_transacciones conciliacion_transacciones[]
 
   @@index([voucher_id], map: "idx_voucher_transacciones_voucher")
   @@index([ultimos_digitos], map: "idx_voucher_transacciones_digitos")
   @@index([numero_recibo], map: "idx_voucher_transacciones_recibo")
+}
+
+model conciliacion_transacciones {
+  id BigInt @id @default(autoincrement())
+
+  // A qué conciliación diaria pertenece (por sucursal + fecha_ventas)
+  conciliacion_id BigInt
+
+  // Opcional: link directo a una transacción OCR del voucher
+  voucher_tx_id BigInt?
+
+  // Opcional: link directo a una transacción detallada del banco
+  banco_detalle_id BigInt?
+
+  // Redundancia útil para debugging rápido (sin joins)
+  sucursal_id BigInt
+  fecha_venta DateTime @db.Date
+
+  // Llaves de match (las que sí existen por tx)
+  terminal        String?    @db.VarChar(50)
+  franquicia      Franquicia @default(DESCONOCIDA)
+  ultimos_digitos String?    @db.VarChar(10) // "8544"
+  numero_autoriza String?    @db.VarChar(50)
+  numero_recibo   String?    @db.VarChar(50)
+
+  // Fechas para detectar desfases
+  fecha_vale  DateTime? @db.Date
+  fecha_abono DateTime? @db.Date
+
+  // Valores comparables
+  monto_voucher       Decimal? @db.Decimal(14, 2) // monto leído en el voucher tx
+  valor_consumo_banco Decimal? @db.Decimal(14, 2)
+  valor_neto_banco    Decimal? @db.Decimal(14, 2)
+
+  // Comisión
+  base_liquidacion_redeban Decimal? @db.Decimal(14, 2) // si la usas para fórmula
+  comision_banco           Decimal? @db.Decimal(14, 2)
+  comision_esperada        Decimal? @db.Decimal(14, 2)
+  diferencia_comision      Decimal? @db.Decimal(14, 2)
+
+  // Resultado automático
+  estado                 EstadoConciliacionTx @default(PENDIENTE_REVISION)
+  es_abono_dia_siguiente Boolean              @default(false)
+  observacion            String?              @db.VarChar(255)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relaciones
+  conciliaciones          conciliaciones           @relation(fields: [conciliacion_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sucursales              sucursales               @relation(fields: [sucursal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  voucher_transacciones   voucher_transacciones?   @relation(fields: [voucher_tx_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  registros_banco_detalle registros_banco_detalle? @relation(fields: [banco_detalle_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([conciliacion_id], map: "idx_conc_tx_conciliacion")
+  @@index([sucursal_id, fecha_venta], map: "idx_conc_tx_sucursal_fecha")
+  @@index([terminal], map: "idx_conc_tx_terminal")
+  @@index([numero_autoriza], map: "idx_conc_tx_autoriza")
+  @@index([numero_recibo], map: "idx_conc_tx_recibo")
+  @@index([ultimos_digitos], map: "idx_conc_tx_digitos")
+  @@index([estado], map: "idx_conc_tx_estado")
 }
