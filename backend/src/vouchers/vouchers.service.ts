@@ -1,9 +1,13 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../infra/db/prisma.service';
 import * as path from 'path';
 import * as fs from 'fs';
 import sharp from 'sharp';
-import { createWorker } from 'tesseract.js';
+import { createWorker, PSM } from 'tesseract.js';
 
 type UploadAndProcessInput = {
   file: Express.Multer.File;
@@ -18,12 +22,16 @@ type Section = 'MC' | 'VISA' | 'QR' | 'NONE';
 export class VouchersService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // =====================================================
+  // =============== UPLOAD + OCR ========================
+  // =====================================================
+
   async uploadAndProcess(input: UploadAndProcessInput) {
     const { file, sucursalId, fechaOperacion, userId } = input;
 
-    if (!file) throw new BadRequestException('Falta archivo image');
+    if (!file) throw new BadRequestException('Falta archivo');
     if (!sucursalId) throw new BadRequestException('Falta sucursalId');
-    if (!fechaOperacion) throw new BadRequestException('Falta fechaOperacion (YYYY-MM-DD)');
+    if (!fechaOperacion) throw new BadRequestException('Falta fechaOperacion');
 
     // 1) Verifica sucursal existe
     const sucursal = await this.prisma.sucursales.findUnique({
@@ -31,9 +39,14 @@ export class VouchersService {
     });
     if (!sucursal) throw new NotFoundException('Sucursal no existe');
 
-    // 2) Mover a carpeta por fecha/sucursal (ordenado)
-    const dateFolder = fechaOperacion;
-    const destDir = path.join(process.cwd(), 'uploads', 'vouchers', dateFolder, String(sucursalId));
+    // 2) Guardar archivo ordenado por fecha/sucursal
+    const destDir = path.join(
+      process.cwd(),
+      'uploads',
+      'vouchers',
+      fechaOperacion,
+      String(sucursalId),
+    );
     fs.mkdirSync(destDir, { recursive: true });
 
     const finalPath = path.join(destDir, file.filename);
@@ -50,11 +63,11 @@ export class VouchersService {
       } as any,
     });
 
-    // 4) OCR + Parsing
+    // 4) OCR + parsing
     const ocr = await this.runOcr(finalPath);
     const parsed = this.parseVoucherText(ocr.text, ocr.confidence);
 
-    // 5) Guardar transacciones
+    // 5) Guardar transacciones (si hay)
     if (parsed.transacciones.length > 0) {
       await this.prisma.voucher_transacciones.createMany({
         data: parsed.transacciones.map((t) => ({
@@ -68,7 +81,7 @@ export class VouchersService {
       });
     }
 
-    // 6) Actualizar totales + precision
+    // 6) Actualizar voucher con totales + precision
     const updated = await this.prisma.vouchers.update({
       where: { id: voucher.id },
       data: {
@@ -81,10 +94,12 @@ export class VouchersService {
       include: { voucher_transacciones: true },
     });
 
-    // 7) Respuesta “serializable” (BigInt → string)
     return this.serializeBigInt(updated);
   }
 
+  // =====================================================
+  // =================== GET VOUCHER =====================
+  // =====================================================
   async getVoucher(id: number) {
     const voucher = await this.prisma.vouchers.findUnique({
       where: { id: BigInt(id) as any },
@@ -93,14 +108,23 @@ export class VouchersService {
         sucursales: true,
       },
     });
+
     if (!voucher) throw new NotFoundException('Voucher no encontrado');
     return this.serializeBigInt(voucher);
   }
 
+  // =====================================================
+  // ================= CONFIRM VOUCHER ===================
+  // =====================================================
   async confirmVoucher(
     id: number,
     confirmadoPorId: number,
-    body: { totalVisa?: number; totalMastercard?: number; totalGlobal?: number; observacion?: string },
+    body: {
+      totalVisa?: number;
+      totalMastercard?: number;
+      totalGlobal?: number;
+      observacion?: string;
+    },
   ) {
     const voucher = await this.prisma.vouchers.findUnique({
       where: { id: BigInt(id) as any },
@@ -114,8 +138,12 @@ export class VouchersService {
         confirmado_en: new Date(),
         estado: 'CONFIRMADO',
         ...(body.totalVisa !== undefined ? { total_visa: body.totalVisa } : {}),
-        ...(body.totalMastercard !== undefined ? { total_mastercard: body.totalMastercard } : {}),
-        ...(body.totalGlobal !== undefined ? { total_global: body.totalGlobal } : {}),
+        ...(body.totalMastercard !== undefined
+          ? { total_mastercard: body.totalMastercard }
+          : {}),
+        ...(body.totalGlobal !== undefined
+          ? { total_global: body.totalGlobal }
+          : {}),
       } as any,
       include: { voucher_transacciones: true },
     });
@@ -123,34 +151,75 @@ export class VouchersService {
     return this.serializeBigInt(updated);
   }
 
-  // ---------------- OCR ----------------
+  // =====================================================
+  // ======================= OCR =========================
+  // =====================================================
 
-  private async runOcr(imagePath: string): Promise<{ text: string; confidence: number }> {
-    const buffer = await sharp(imagePath)
-      .grayscale()
-      .resize({ width: 1800, withoutEnlargement: true })
-      .sharpen()
-      .toBuffer();
-
+  private async runOcr(
+    imagePath: string,
+  ): Promise<{ text: string; confidence: number }> {
     const worker = await createWorker('spa');
+
     try {
-      const { data } = await worker.recognize(buffer);
+      // ===== INTENTO 1 =====
+      const buf1 = await sharp(imagePath)
+        .grayscale()
+        .resize({ width: 2000, withoutEnlargement: true })
+        .sharpen()
+        .toBuffer();
+
+      await worker.setParameters({
+        tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
+      });
+
+      const a = await worker.recognize(buf1);
+
+      // ===== INTENTO 2 (fallback) =====
+      if ((a.data.confidence ?? 0) < 35) {
+        const buf2 = await sharp(imagePath)
+          .grayscale()
+          .normalize()
+          .resize({ width: 2200, withoutEnlargement: true })
+          .sharpen()
+          .toBuffer();
+
+        await worker.setParameters({
+          tessedit_pageseg_mode: PSM.SPARSE_TEXT,
+        });
+
+        const b = await worker.recognize(buf2);
+
+        const best =
+          (b.data.confidence ?? 0) > (a.data.confidence ?? 0) ? b : a;
+
+        return {
+          text: best.data.text || '',
+          confidence: best.data.confidence ?? 0,
+        };
+      }
+
       return {
-        text: data.text || '',
-        confidence: data.confidence ?? 0,
+        text: a.data.text || '',
+        confidence: a.data.confidence ?? 0,
       };
     } finally {
       await worker.terminate();
     }
   }
 
-  // ---------------- PARSER ROBUSTO ----------------
+  // =====================================================
+  // ======================= PARSER ======================
+  // =====================================================
 
-  private parseVoucherText(text: string, ocrConfidence = 0) {
+  private parseVoucherText(text: string, confidence = 0) {
     const lines = text
       .split('\n')
       .map((l) => this.normalizeLine(l))
       .filter(Boolean);
+
+    let section: Section = 'NONE';
+    let totalVisa = 0;
+    let totalMastercard = 0;
 
     const transacciones: Array<{
       franquicia: 'VISA' | 'MASTERCARD' | 'DESCONOCIDA';
@@ -160,35 +229,24 @@ export class VouchersService {
       linea_ocr: string;
     }> = [];
 
-    let section: Section = 'NONE';
-
-    let totalVisa = 0;
-    let totalMastercard = 0;
-
     for (const line of lines) {
-      // Detecta cambio de sección
       const sec = this.detectSection(line);
       if (sec) section = sec;
 
-      // Si entramos a QR, ignoramos lo que sigue (por ahora)
       if (section === 'QR') continue;
-
-      // Filtros para no guardar basura
       if (this.isIgnorableLine(line)) continue;
 
-      // Intenta parsear transacción
       const parsed = this.parseTxLine(line);
       if (!parsed) continue;
 
-      // Franquicia por sección
       const franquicia =
-        section === 'MC' ? 'MASTERCARD' :
-        section === 'VISA' ? 'VISA' :
-        'DESCONOCIDA';
+        section === 'MC'
+          ? 'MASTERCARD'
+          : section === 'VISA'
+          ? 'VISA'
+          : 'DESCONOCIDA';
 
-      // Si aún no sabemos sección, no guardamos (evita ruido)
-      if (franquicia === 'DESCONOCIDA') continue;
-
+      // ⚠️ Fallback: si no detectó sección, igual guarda (mejor que perder data)
       transacciones.push({
         franquicia,
         ultimos_digitos: parsed.ultimos4,
@@ -201,112 +259,69 @@ export class VouchersService {
       if (franquicia === 'MASTERCARD') totalMastercard += parsed.monto;
     }
 
-    const totalGlobal = totalVisa + totalMastercard;
-
-    // Precision: usa la confianza OCR como base (0..100)
-    const precision = Math.max(0, Math.min(99, Math.round(ocrConfidence)));
-
     return {
       transacciones,
       totalVisa,
       totalMastercard,
-      totalGlobal,
-      precision,
+      totalGlobal: totalVisa + totalMastercard,
+      precision: Math.round(Math.min(99, Math.max(0, confidence))),
     };
   }
 
   private normalizeLine(line: string) {
-    return line
-      .replace(/[^\S\r\n]+/g, ' ')
-      .replace(/[—–]/g, '-')
-      .trim();
+    return line.replace(/[—–]/g, '-').replace(/\s+/g, ' ').trim();
   }
 
   private detectSection(line: string): Section | null {
     const t = line.toUpperCase();
     if (t.includes('MASTERCARD')) return 'MC';
     if (t.includes('VISA')) return 'VISA';
-    if (t.includes('TOTALES QR') || t.includes('EMVCO') || t.includes('QR')) return 'QR';
+    if (t.includes('QR')) return 'QR';
     return null;
   }
 
   private isIgnorableLine(line: string) {
-    const t = line.trim().toUpperCase();
-    if (!t) return true;
-
-    // Encabezados / títulos
-    if (t.includes('REPORTE DETALLADO')) return true;
-    if (t.startsWith('COD') || t.startsWith('TERMINAL')) return true;
-    if (t.startsWith('TJ') || t.startsWith('RECIBO') || t.startsWith('MONTO')) return true;
-
-    // Totales / separadores
-    if (t.startsWith('TOTAL')) return true;
-    if (t.includes('GRAN TOTAL')) return true;
-
-    return false;
+    const t = line.toUpperCase();
+    return (
+      t.startsWith('TOTAL') ||
+      t.includes('GRAN TOTAL') ||
+      t.includes('REPORTE') ||
+      t.includes('TERMINAL') ||
+      t.includes('RECIBO')
+    );
   }
 
-  /**
-   * Parseo de línea transaccional:
-   * - Captura dígitos (con ** opcional) + recibo (5-6) + monto
-   * Ej:
-   * "**8341 001236 $22 400"
-   * "41682 001237 $24.400"   -> ultimos4 = 1682
-   * "114209 001241 $36.700 3"-> ultimos4 = 4209, monto = 36700
-   */
-  private parseTxLine(line: string): { ultimos4: string; recibo: string; monto: number; linea: string } | null {
-    const t = this.normalizeLine(line);
-
-    // Requiere: [algo con dígitos] [recibo] [monto...]
-    const m = t.match(/(\*{0,3}\d{3,10})\s+(\d{5,6})\s+\$?\s*(.+)$/);
+  private parseTxLine(line: string) {
+    // 1) formato ideal: **8041 007107 $12.400
+    const m = line.match(/(\*?\d{4,10})\s+(\d{5,6})\s+\$?\s*(.+)$/);
     if (!m) return null;
 
-    const rawDigits = m[1];   // "**8341" / "41682" / "114209"
-    const recibo = m[2];      // "001236"
-    const rawAmount = m[3];   // "22 400" / "24.400" / "36.700 3"
+    const digits = m[1].replace(/\D/g, '');
+    if (digits.length < 4) return null;
 
-    const onlyDigits = rawDigits.replace(/\D/g, '');
-    if (onlyDigits.length < 4) return null;
+    const monto = this.parseMoneyCOP(m[3]);
+    if (!monto || monto < 1000) return null;
 
-    const ultimos4 = onlyDigits.slice(-4);
-
-    const monto = this.parseMoneyCOP(rawAmount);
-    if (monto == null) return null;
-
-    // Reglas anti-ruido: montos absurdamente pequeños casi siempre son OCR basura
-    if (monto < 1000) return null;
-
-    return { ultimos4, recibo, monto, linea: t };
+    return {
+      ultimos4: digits.slice(-4),
+      recibo: m[2],
+      monto,
+      linea: line,
+    };
   }
 
-  /**
-   * COP robusto:
-   * - "10.400" -> 10400
-   * - "22 400" -> 22400
-   * - "36.700 3" -> 36700 (toma el primer bloque)
-   */
   private parseMoneyCOP(raw: string): number | null {
-    const cleaned = raw
-      .replace(/\$/g, '')
-      .replace(/[^\d.,\s]/g, '')
-      .trim();
+    const clean = raw.replace(/[^\d.,\s]/g, '').trim();
+    const block = clean.match(/[\d][\d\s.,]*/)?.[0];
+    if (!block) return null;
 
-    if (!cleaned) return null;
-
-    // Toma el primer bloque "numérico" (evita basura al final)
-    const first = cleaned.match(/[\d][\d\s.,]*/)?.[0]?.trim();
-    if (!first) return null;
-
-    const noSpaces = first.replace(/\s+/g, '');
-
-    // Quita separadores de miles "." y ","
-    const digitsOnly = noSpaces.replace(/[.,]/g, '');
-
-    const n = Number(digitsOnly);
+    const n = Number(block.replace(/\s+/g, '').replace(/[.,]/g, ''));
     return Number.isFinite(n) ? n : null;
   }
 
-  // BigInt safe
+  // =====================================================
+  // =================== BIGINT SAFE =====================
+  // =====================================================
   private serializeBigInt(obj: any) {
     return JSON.parse(
       JSON.stringify(obj, (_k, v) => (typeof v === 'bigint' ? v.toString() : v)),
