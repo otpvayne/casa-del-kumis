@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Req,
   UploadedFile,
@@ -18,6 +20,7 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Rol } from '@prisma/client';
 import { VouchersService } from './vouchers.service';
+import { UpdateVoucherDraftDto } from './dto/update-voucher-draft.dto';
 
 function filenameFactory(_req: any, file: Express.Multer.File, cb: any) {
   const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
@@ -56,9 +59,27 @@ export class VouchersController {
 
   // ✅ Ver voucher + transacciones
   @Get(':id')
-  @Roles(Rol.OPERATIVO, Rol.ADMIN, Rol.PROPIETARIO, Rol.DESARROLLADOR, Rol.SOPORTE)
+  @Roles(
+    Rol.OPERATIVO,
+    Rol.ADMIN,
+    Rol.PROPIETARIO,
+    Rol.DESARROLLADOR,
+    Rol.SOPORTE,
+  )
   async getVoucher(@Param('id', ParseIntPipe) id: number) {
     return this.vouchersService.getVoucher(id);
+  }
+
+  // ✅ VALIDACIÓN COMPLETA (editar / eliminar / añadir transacciones + editar totales)
+  // - Reemplaza TODAS las transacciones si el body trae "transacciones"
+  // - Actualiza totales si vienen en el body
+  @Patch(':id/draft')
+  @Roles(Rol.OPERATIVO, Rol.ADMIN, Rol.PROPIETARIO)
+  async updateVoucherDraft(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateVoucherDraftDto,
+  ) {
+    return this.vouchersService.updateVoucherDraft(id, body);
   }
 
   // ✅ Confirmar voucher (ADMIN/PROPIETARIO)
@@ -76,5 +97,12 @@ export class VouchersController {
     @Req() req: any,
   ) {
     return this.vouchersService.confirmVoucher(id, Number(req.user.sub), body);
+  }
+
+  // 🧨 OPCIONAL: borrar voucher (para limpiar pruebas)
+  @Delete(':id')
+  @Roles(Rol.ADMIN, Rol.DESARROLLADOR)
+  async deleteVoucher(@Param('id', ParseIntPipe) id: number) {
+    return this.vouchersService.deleteVoucher(id);
   }
 }
