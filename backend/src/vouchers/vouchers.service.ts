@@ -556,65 +556,79 @@ export class VouchersService {
   }
 
   private parseVoucherText(text: string) {
-    const lines = text
-      .split('\n')
-      .map((l) => this.normalizeLine(l))
-      .filter((l) => l.length > 0);
+  const lines = text
+    .split('\n')
+    .map((l) => this.normalizeLine(l))
+    .filter((l) => l.length > 0);
 
-    let section: Section = 'NONE';
-    const transacciones: ParsedTx[] = [];
+  let section: Section = 'NONE';
+  const transacciones: ParsedTx[] = [];
 
-    let printedTotalMC: number | null = null;
-    let printedTotalVisa: number | null = null;
-    let printedGrandTotal: number | null = null;
+  let printedTotalMC: number | null = null;
+  let printedTotalVisa: number | null = null;
+  let printedGrandTotal: number | null = null;
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const upper = line.toUpperCase();
+  // Flag para evitar que el TOTAL del GRAN TOTAL se meta como total de VISA/MC
+  let inGrandTotalBlock = false;
 
-      // Detectar sección (robusto)
-      const sec = this.detectSection(line);
-      if (sec) {
-        section = sec;
-        continue;
-      }
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const upper = line.toUpperCase();
 
-      if (section === 'QR') break;
-
-      // GRAN TOTAL: "GRAN TOTAL" + siguiente línea "TOTAL 0018 $495.700"
-      if (upper.includes('GRAN TOTAL') || upper.replace(/\s+/g, '').includes('GRANTOTAL')) {
-        const next = lines[i + 1] ? lines[i + 1] : '';
-        const totalNext = this.extractSectionTotal(next);
-        if (totalNext != null) printedGrandTotal = totalNext;
-        continue;
-      }
-
-      // Totales de sección: "TOTAL 0008 $196.300"
-      if (section === 'MC' || section === 'VISA') {
-        const total = this.extractSectionTotal(line);
-        if (total != null) {
-          if (section === 'MC') printedTotalMC = total;
-          if (section === 'VISA') printedTotalVisa = total;
-
-          // ✅ IMPORTANTÍSIMO: cerrar sección para no seguir “comiendo” líneas
-          section = 'NONE';
-          continue;
-        }
-      }
-
-      if (this.isIgnorableLine(line)) continue;
-
-      const tx = this.parseTxLine(line, section);
-      if (tx) transacciones.push(tx);
+    // Detectar sección (robusto)
+    const sec = this.detectSection(line);
+    if (sec) {
+      section = sec;
+      // Si entramos a VISA/MC, ya no estamos en gran total
+      if (sec === 'MC' || sec === 'VISA') inGrandTotalBlock = false;
+      continue;
     }
 
-    return {
-      transacciones,
-      printedTotalMC,
-      printedTotalVisa,
-      printedGrandTotal,
-    };
+    if (section === 'QR') break;
+
+    // ✅ Detectar "GRAN TOTAL" y activar modo bloque
+    if (upper.includes('GRAN TOTAL') || upper.replace(/\s+/g, '').includes('GRANTOTAL')) {
+      inGrandTotalBlock = true;
+      section = 'NONE'; // IMPORTANTÍSIMO: no permitir que siga como VISA
+      continue;
+    }
+
+    // ✅ Si estamos en bloque de GRAN TOTAL, capturamos el TOTAL xxxx y NO lo usamos como total de VISA/MC
+    if (inGrandTotalBlock) {
+      const gt = this.extractSectionTotal(line);
+      if (gt != null) {
+        printedGrandTotal = gt;
+        // opcional: una vez capturado, desactivamos el bloque
+        inGrandTotalBlock = false;
+      }
+      continue;
+    }
+
+    // Totales de sección: "TOTAL 0008 $196.300"
+    if (section === 'MC' || section === 'VISA') {
+      const total = this.extractSectionTotal(line);
+      if (total != null) {
+        if (section === 'MC') printedTotalMC = total;
+        if (section === 'VISA') printedTotalVisa = total;
+        section = 'NONE'; // cerrar sección para evitar contaminación
+        continue;
+      }
+    }
+
+    if (this.isIgnorableLine(line)) continue;
+
+    const tx = this.parseTxLine(line, section);
+    if (tx) transacciones.push(tx);
   }
+
+  return {
+    transacciones,
+    printedTotalMC,
+    printedTotalVisa,
+    printedGrandTotal,
+  };
+}
+
 
   private normalizeLine(line: string): string {
     return line.replace(/[—–]/g, '-').replace(/\s+/g, ' ').trim();
