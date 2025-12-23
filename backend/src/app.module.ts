@@ -7,13 +7,15 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { SucursalesModule } from './sucursales/sucursales.module';
 import { VouchersModule } from './vouchers/vouchers.module';
+import { RedeBanModule } from './redeban/redeban.module';
 @Module({
   imports: [
     PrismaModule,
     AuthModule,
     UsersModule,
     SucursalesModule,
-    VouchersModule, // 👈 añadimos el módulo de usuarios
+    VouchersModule,
+    RedeBanModule, // 👈 añadimos el módulo de usuarios
   ],
   controllers: [AppController],
   providers: [AppService],

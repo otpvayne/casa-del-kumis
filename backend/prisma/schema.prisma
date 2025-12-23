@@ -202,15 +202,26 @@ model registros_redeban {
   id                     BigInt   @id @default(autoincrement())
   archivo_redeban_id     BigInt
   sucursal_id            BigInt?
+
+  // Excel
   codigo_comercio        String   @db.VarChar(50)
+  direccion              String?  @db.VarChar(200)
+
   cantidad_transacciones Int?
   valor_bruto            Decimal? @db.Decimal(14, 2)
-  base_liquidacion       Decimal? @db.Decimal(14, 2)
   iva                    Decimal? @db.Decimal(14, 2)
   consumo                Decimal? @db.Decimal(14, 2)
+
+  tasa_aerop_propina     Decimal? @db.Decimal(14, 2)
+
+  base_liquidacion       Decimal? @db.Decimal(14, 2)
   comision               Decimal? @db.Decimal(14, 2)
+
+  retefuente             Decimal? @db.Decimal(14, 2)
   rete_iva               Decimal? @db.Decimal(14, 2)
   rete_ica               Decimal? @db.Decimal(14, 2)
+
+  neto                   Decimal? @db.Decimal(14, 2)
 
   archivos_redeban archivos_redeban @relation(fields: [archivo_redeban_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   sucursales       sucursales?      @relation(fields: [sucursal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
