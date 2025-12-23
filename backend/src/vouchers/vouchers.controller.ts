@@ -84,7 +84,7 @@ export class VouchersController {
 
   // ✅ Confirmar voucher (ADMIN/PROPIETARIO)
   @Post(':id/confirm')
-  @Roles(Rol.ADMIN, Rol.PROPIETARIO)
+  @Roles(Rol.ADMIN, Rol.PROPIETARIO,Rol.OPERATIVO)
   async confirmVoucher(
     @Param('id', ParseIntPipe) id: number,
     @Body()
