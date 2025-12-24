@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { SucursalesModule } from './sucursales/sucursales.module';
 import { VouchersModule } from './vouchers/vouchers.module';
 import { RedeBanModule } from './redeban/redeban.module';
+import { BancoModule } from './banco/banco.module';
 @Module({
   imports: [
     PrismaModule,
@@ -15,7 +16,8 @@ import { RedeBanModule } from './redeban/redeban.module';
     UsersModule,
     SucursalesModule,
     VouchersModule,
-    RedeBanModule, // 👈 añadimos el módulo de usuarios
+    RedeBanModule,
+    BancoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
