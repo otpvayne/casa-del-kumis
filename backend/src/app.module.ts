@@ -9,6 +9,8 @@ import { SucursalesModule } from './sucursales/sucursales.module';
 import { VouchersModule } from './vouchers/vouchers.module';
 import { RedeBanModule } from './redeban/redeban.module';
 import { BancoModule } from './banco/banco.module';
+import { ConciliacionModule } from './conciliacion/conciliacion.module';
+
 @Module({
   imports: [
     PrismaModule,
@@ -18,6 +20,7 @@ import { BancoModule } from './banco/banco.module';
     VouchersModule,
     RedeBanModule,
     BancoModule,
+    ConciliacionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

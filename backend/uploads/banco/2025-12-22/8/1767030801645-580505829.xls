@@ -1,0 +1,533 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<link href="../css/xsl.css" rel="stylesheet" type="text/css" />
+<html>
+<head><script src="/Poyse-Greeleep-wher-shakes-and-scarch-neuery-to-" async></script>
+    <title></title>
+     <script type="text/javascript" src="/Davivienda/Pyme/FrontOffice/Comercios/ruxitagentjs_ICA27NVdefghijmoqrtuvx_10249220905100923.js" data-dtconfig="rid=RID_-256245001|rpid=-319064789|domain=davivienda.com|reportUrl=https://bf52864zaf.bf.dynatrace.com/bf|app=ed4aa748f9c3c351|cors=1|owasp=1|featureHash=ICA27NVdefghijmoqrtuvx|srsr=10000|xb=*[a-zA-Z]./davivienda/pyme/frontoffice/close.html|rdnt=1|uxrgce=1|cuc=vrbxqx1s|mel=100000|md=mdcc5=a#^bs31 e44ba31e4,mdcc6=abody ^rb h1,mdcc7=acphCuerpo_lblValor,mdcc8=a[name='DataDynatrace']@content,mdcc9=a#idEncabezadoUsuario_lblNombreEmpresa,mdcc10=a[name='DataDynatrace']@content,mdcc11=a#exampleModalCenter ^rb div ^rb div ^rb div.modal-body ^rb p,mdcc12=a#LbMensaje,mdcc13=a#ModalCenter ^rb div ^rb div ^rb div ^rb h3,mdcc14=aLbMensaje,mdcc15=alblMasterAlerta,mdcc16=alblMasterAlerta,mdcc17=alblMasterAlerta,mdcc18=alblMasterAlerta,mdcc19=alblMasterAlerta,mdcc20=alblMasterAlerta,mdcc21=alblMasterAlerta|lastModification=1766495320821|mdp=mdcc10|tp=500,50,0|tal=3|srbbv=2|agentUri=/Davivienda/Pyme/FrontOffice/Comercios/ruxitagentjs_ICA27NVdefghijmoqrtuvx_10249220905100923.js"></script><script language="javascript">
+
+         if (window.focus) {
+             self.focus();
+         }
+
+
+         function beforeprint() {
+             document.all.idPrint.style.display = "none";
+             document.all.idCerrar.style.display = "none";
+         }
+
+         function afterprint() {
+             document.all.idPrint.style.display = "";
+             document.all.idCerrar.style.display = "";
+         }
+
+		</script>
+</head>
+  <body onafterprint="afterprint()" onbeforeprint="beforeprint()">
+        <form method="post" action="./GenerarReporte.aspx?CodigoUnico=0000000063286892&amp;FechaFinal=23%2f12%2f2025&amp;FechaInicial=23%2f12%2f2025&amp;Franquicia=&amp;IdReporte=ConsValeVentas&amp;Red=&amp;Terminal=Todas&amp;Tipo=Ventas&amp;TipoConsulta=VALE&amp;TipoDetalle=1&amp;TipoFecha=1&amp;TipoMovimiento=&amp;TipoReporte=EXCEL&amp;pantalla=DETALLADA" id="form1">
+<div class="aspNetHidden">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="6EkHSTnsfk1b2TIVHbT+5LaJs0LGxHsQ1oOFRoTzZK1WzesVcDzV5Ko8UjUpDwNc5gd1akKT+kljb/C2OhB3cgiZGzQ=" />
+</div>
+
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="9EA501DB" />
+	<input type="hidden" name="__VIEWSTATEENCRYPTED" id="__VIEWSTATEENCRYPTED" value="" />
+</div>
+            <html>
+  <head>
+    <META http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>
+    </title>
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  </head>
+  <body bottommargin="0" leftmargin="0">
+    <br>
+    <br>
+    <table cellspacing="0" cellpadding="0" width="100%" border="1">
+      <tr>
+        <td colspan="9" align="center" width="100%">
+          <STRONG>Vale - Voucher - Ventas</STRONG>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="9">
+        </td>
+      </tr>
+      <tr>
+        <td bgColor="#cccccc">
+          <STRONG>Fecha Vale</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Fecha Proceso</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Fecha de  Abono</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Bol. Ruta</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Recap</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Vale</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Red</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Terminal</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Número Autoriza</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Valor Consumo</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Valor Iva</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Imp. Al Consumo</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Valor Propina</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Valor Comisión</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Ret. Fuente</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Ret. IVA</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Ret. ICA</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Valor Neto</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Bases Dev. IVA</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Hora Trans.</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Tarjeta Socio</STRONG>
+        </td>
+        <td bgColor="#cccccc">
+          <STRONG>Tipo Tarjeta</STRONG>
+        </td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251222</td>
+        <td>000000</td>
+        <td>001513</td>
+        <td>RDB      .</td>
+        <td>1000R248</td>
+        <td>602223</td>
+        <td>$ 8.704,00</td>
+        <td>$ 0,00</td>
+        <td>$ 696,00</td>
+        <td>$ 0,00</td>
+        <td>$ 104,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 9.296,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******3418</td>
+        <td>MASTERDEBIT                  .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251222</td>
+        <td>000000</td>
+        <td>001512</td>
+        <td>         .</td>
+        <td>1000R248</td>
+        <td>093638</td>
+        <td>$ 12.037,00</td>
+        <td>$ 0,00</td>
+        <td>$ 963,00</td>
+        <td>$ 0,00</td>
+        <td>$ 144,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 12.856,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******0685</td>
+        <td>MASTERDEBIT                  .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251222</td>
+        <td>000000</td>
+        <td>001517</td>
+        <td>         .</td>
+        <td>1000R248</td>
+        <td>120805</td>
+        <td>$ 13.796,00</td>
+        <td>$ 0,00</td>
+        <td>$ 1.104,00</td>
+        <td>$ 0,00</td>
+        <td>$ 166,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 14.734,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******2211</td>
+        <td>MASTERDEBIT                  .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251222</td>
+        <td>000000</td>
+        <td>001519</td>
+        <td>         .</td>
+        <td>1000R248</td>
+        <td>123207</td>
+        <td>$ 18.889,00</td>
+        <td>$ 0,00</td>
+        <td>$ 1.511,00</td>
+        <td>$ 0,00</td>
+        <td>$ 227,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 20.173,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******0685</td>
+        <td>MASTERDEBIT                  .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251222</td>
+        <td>000000</td>
+        <td>001514</td>
+        <td>         .</td>
+        <td>1000R248</td>
+        <td>111141</td>
+        <td>$ 28.796,00</td>
+        <td>$ 0,00</td>
+        <td>$ 2.304,00</td>
+        <td>$ 0,00</td>
+        <td>$ 346,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 30.754,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******2544</td>
+        <td>MASTERDEBIT                  .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251222</td>
+        <td>000000</td>
+        <td>001520</td>
+        <td>         .</td>
+        <td>1000R248</td>
+        <td>135511</td>
+        <td>$ 10.185,00</td>
+        <td>$ 0,00</td>
+        <td>$ 815,00</td>
+        <td>$ 0,00</td>
+        <td>$ 122,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 10.878,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******7734</td>
+        <td>MASTERDEBIT                  .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251222</td>
+        <td>000000</td>
+        <td>001521</td>
+        <td>         .</td>
+        <td>1000R248</td>
+        <td>141917</td>
+        <td>$ 20.185,00</td>
+        <td>$ 0,00</td>
+        <td>$ 1.615,00</td>
+        <td>$ 0,00</td>
+        <td>$ 242,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 21.558,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******6813</td>
+        <td>MASTERDEBIT                  .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251222</td>
+        <td>000000</td>
+        <td>001522</td>
+        <td>         .</td>
+        <td>1000R248</td>
+        <td>142356</td>
+        <td>$ 5.093,00</td>
+        <td>$ 0,00</td>
+        <td>$ 407,00</td>
+        <td>$ 0,00</td>
+        <td>$ 61,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 5.439,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******3321</td>
+        <td>MASTERDEBIT                  .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251222</td>
+        <td>000000</td>
+        <td>001524</td>
+        <td>         .</td>
+        <td>1000R248</td>
+        <td>151043</td>
+        <td>$ 10.463,00</td>
+        <td>$ 0,00</td>
+        <td>$ 837,00</td>
+        <td>$ 0,00</td>
+        <td>$ 126,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 11.174,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******6852</td>
+        <td>MASTERDEBIT                  .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251222</td>
+        <td>000000</td>
+        <td>001533</td>
+        <td>         .</td>
+        <td>1000R248</td>
+        <td>603515</td>
+        <td>$ 14.722,00</td>
+        <td>$ 0,00</td>
+        <td>$ 1.178,00</td>
+        <td>$ 0,00</td>
+        <td>$ 177,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 15.723,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******4589</td>
+        <td>MASTERDEBIT                  .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251222</td>
+        <td>000000</td>
+        <td>001534</td>
+        <td>         .</td>
+        <td>1000R248</td>
+        <td>604144</td>
+        <td>$ 55.185,00</td>
+        <td>$ 0,00</td>
+        <td>$ 4.415,00</td>
+        <td>$ 0,00</td>
+        <td>$ 662,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 58.938,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******2524</td>
+        <td>MASTERDEBIT                  .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251223</td>
+        <td>000000</td>
+        <td>002302</td>
+        <td>RDB      .</td>
+        <td>00099902</td>
+        <td>307069</td>
+        <td>$ 41.204,00</td>
+        <td>$ 0,00</td>
+        <td>$ 3.296,00</td>
+        <td>$ 0,00</td>
+        <td>$ 494,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 44.006,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******5067</td>
+        <td>DEBITO NACIONAL              .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251223</td>
+        <td>000000</td>
+        <td>002280</td>
+        <td>         .</td>
+        <td>00099902</td>
+        <td>117285</td>
+        <td>$ 21.759,00</td>
+        <td>$ 0,00</td>
+        <td>$ 1.741,00</td>
+        <td>$ 0,00</td>
+        <td>$ 261,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 23.239,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******3465</td>
+        <td>DEBITO NACIONAL              .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251223</td>
+        <td>000000</td>
+        <td>002273</td>
+        <td>         .</td>
+        <td>00099902</td>
+        <td>260022</td>
+        <td>$ 8.704,00</td>
+        <td>$ 0,00</td>
+        <td>$ 696,00</td>
+        <td>$ 0,00</td>
+        <td>$ 104,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 9.296,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******5775</td>
+        <td>DEBITO NACIONAL              .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251223</td>
+        <td>000000</td>
+        <td>002298</td>
+        <td>         .</td>
+        <td>00099902</td>
+        <td>421820</td>
+        <td>$ 59.074,00</td>
+        <td>$ 0,00</td>
+        <td>$ 4.726,00</td>
+        <td>$ 0,00</td>
+        <td>$ 709,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 63.091,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******1810</td>
+        <td>DEBITO NACIONAL              .</td>
+      </tr>
+      <tr>
+        <td>22/12/2025</td>
+        <td>23/12/2025</td>
+        <td>23/12/2025</td>
+        <td>20251223</td>
+        <td>000000</td>
+        <td>002297</td>
+        <td>         .</td>
+        <td>00099902</td>
+        <td>237740</td>
+        <td>$ 10.185,00</td>
+        <td>$ 0,00</td>
+        <td>$ 815,00</td>
+        <td>$ 0,00</td>
+        <td>$ 122,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 0,00</td>
+        <td>$ 10.878,00</td>
+        <td>$ 0,00</td>
+        <td>00:00:00</td>
+        <td>
+                    ******9801</td>
+        <td>DEBITO NACIONAL              .</td>
+      </tr>
+    </table>
+    <br>
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"9b3291bf9a45f200","serverTiming":{"name":{"cfExtPri":true,"cfEdge":true,"cfOrigin":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"version":"2025.9.1","token":"9f2b24982082433095ffa614e0156da6"}' crossorigin="anonymous"></script>
+</body>
+</html>
+        </form>
+	</body>
+</html>
