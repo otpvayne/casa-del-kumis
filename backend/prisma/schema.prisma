@@ -122,7 +122,10 @@ model parametros_sistema {
   margen_error_permitido Decimal  @db.Decimal(14, 2)
   dias_desfase_banco     Int      @default(1)
   activo                 Boolean  @default(true)
+  created_at            DateTime @default(now()) @db.Timestamptz(6)
   updated_at             DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([activo], map: "idx_params_activo")
 }
 
 model registros_banco {
