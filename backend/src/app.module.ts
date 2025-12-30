@@ -11,7 +11,7 @@ import { RedeBanModule } from './redeban/redeban.module';
 import { BancoModule } from './banco/banco.module';
 import { ConciliacionModule } from './conciliacion/conciliacion.module';
 import { ParametrosSistemaModule } from './parametros-sistema/parametros-sistema.module';
-
+import { LogsModule } from './logs/logs.module';
 
 @Module({
   imports: [
@@ -24,6 +24,7 @@ import { ParametrosSistemaModule } from './parametros-sistema/parametros-sistema
     BancoModule,
     ConciliacionModule,
     ParametrosSistemaModule,
+    LogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
