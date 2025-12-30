@@ -10,6 +10,8 @@ import { VouchersModule } from './vouchers/vouchers.module';
 import { RedeBanModule } from './redeban/redeban.module';
 import { BancoModule } from './banco/banco.module';
 import { ConciliacionModule } from './conciliacion/conciliacion.module';
+import { ParametrosSistemaModule } from './parametros-sistema/parametros-sistema.module';
+
 
 @Module({
   imports: [
@@ -21,6 +23,7 @@ import { ConciliacionModule } from './conciliacion/conciliacion.module';
     RedeBanModule,
     BancoModule,
     ConciliacionModule,
+    ParametrosSistemaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
