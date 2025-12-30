@@ -9,6 +9,7 @@ import * as fs from 'fs';
 import sharp from 'sharp';
 import { createWorker, PSM } from 'tesseract.js';
 import { ImageAnnotatorClient } from '@google-cloud/vision';
+import { LogsService } from '../logs/logs.service';
 
 type UploadAndProcessInput = {
   file: Express.Multer.File;
@@ -55,7 +56,7 @@ type ParsedResult = {
 
 @Injectable()
 export class VouchersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService,private readonly logs: LogsService,) {}
 
   // =====================================================
   // =============== UPLOAD + OCR ========================

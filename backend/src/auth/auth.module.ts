@@ -6,10 +6,12 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
+import { LogsModule } from '../logs/logs.module';
 
 @Module({
   imports: [
     PassportModule,
+    LogsModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'dev_secret_kumis',
       signOptions: {

@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../infra/db/prisma.service';
+import { LogsService } from '../logs/logs.service';
 
 type ParamsSistema = {
   tasa_comision: number; // ej 0.012
@@ -45,7 +46,7 @@ type MatchCandidate = {
 
 @Injectable()
 export class ConciliacionService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService,private readonly logs: LogsService,) {}
 
   // =====================================================
   // =============== GENERAR CONCILIACIÓN ================

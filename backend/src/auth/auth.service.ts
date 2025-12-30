@@ -10,6 +10,8 @@ import { PrismaService } from '../infra/db/prisma.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { Rol, usuarios } from '@prisma/client';
+import { LogsService } from '../logs/logs.service';
+
 
 export interface AuthResponse {
   accessToken: string;
@@ -29,6 +31,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly logs: LogsService,
   ) {}
 
   // 👤 Registrar usuario
