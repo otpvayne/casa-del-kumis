@@ -286,6 +286,7 @@ model vouchers {
 
   // Relaciones
   conciliaciones conciliaciones[]
+  voucher_imagenes voucher_imagenes[]
 
   usuarios_vouchers_confirmado_por_idTousuarios usuarios?               @relation("vouchers_confirmado_por_idTousuarios", fields: [confirmado_por_id], references: [id])
   usuarios_vouchers_creado_por_idTousuarios     usuarios                @relation("vouchers_creado_por_idTousuarios", fields: [creado_por_id], references: [id])
@@ -312,6 +313,19 @@ model voucher_transacciones {
   @@index([voucher_id], map: "idx_voucher_transacciones_voucher")
   @@index([ultimos_digitos], map: "idx_voucher_transacciones_digitos")
   @@index([numero_recibo], map: "idx_voucher_transacciones_recibo")
+}
+model voucher_imagenes {
+  id            BigInt   @id @default(autoincrement())
+  voucher_id    BigInt
+  ruta_imagen   String   @db.VarChar(255)
+  orden         Int      @default(1)
+  precision_ocr Decimal? @db.Decimal(5, 2)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  vouchers vouchers @relation(fields: [voucher_id], references: [id], onDelete: Cascade)
+
+  @@index([voucher_id], map: "idx_voucher_img_voucher")
+  @@unique([voucher_id, orden], map: "uq_voucher_img_orden")
 }
 
 model conciliacion_transacciones {
