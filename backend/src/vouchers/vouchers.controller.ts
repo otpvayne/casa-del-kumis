@@ -327,4 +327,17 @@ export class VouchersController {
   async deleteVoucher(@Param('id', ParseIntPipe) id: number) {
     return this.vouchersService.deleteVoucher(id);
   }
+  // LISTAR vouchers (para frontend)
+@Get()
+@Roles(
+  Rol.OPERATIVO,
+  Rol.ADMIN,
+  Rol.PROPIETARIO,
+  Rol.DESARROLLADOR,
+  Rol.SOPORTE,
+)
+async listVouchers() {
+  return this.vouchersService.listVouchers();
+}
+
 }

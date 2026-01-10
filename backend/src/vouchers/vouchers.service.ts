@@ -938,4 +938,23 @@ export class VouchersService {
       ),
     );
   }
+  // ===========================
+// LISTAR VOUCHERS (LIST VIEW)
+// ===========================
+async listVouchers() {
+  const vouchers = await this.prisma.vouchers.findMany({
+    orderBy: { created_at: "desc" },
+    include: {
+      sucursales: {
+        select: {
+          id: true,
+          nombre: true,
+        },
+      },
+    },
+  });
+
+  return this.serializeBigInt(vouchers);
+}
+
 }
