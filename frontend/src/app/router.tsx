@@ -40,7 +40,7 @@ export const router = createBrowserRouter([
             children: [
               { path: "/sucursales", element: <SucursalesPage /> },
 { path: "/users", element: <UsersPage /> },
-{ path: "/parametros", element: <ParametrosPage /> },
+{ path: "/parametros", element: <ParametrosSistemaPage /> },
 { path: "/redeban", element: <RedeBanPage /> },
 { path: "/banco", element: <BancoPage /> },
 { path: "/conciliaciones", element: <ConciliacionesPage /> },

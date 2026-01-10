@@ -6,16 +6,18 @@ export default function AdminLayout() {
       {/* Sidebar simple (luego lo mejoramos) */}
       <aside className="w-64 p-4 border-r border-white/10">
         <h2 className="text-lg font-semibold mb-4">Casa del Kumis</h2>
-        <nav className="space-y-2">
-  <Link to="/dashboard">Dashboard</Link>
-  <Link to="/vouchers">Vouchers</Link>
-  <Link to="/conciliaciones">Conciliaciones</Link>
-  <Link to="/redeban">RedeBan</Link>
-  <Link to="/banco">Banco</Link>
-  <Link to="/sucursales">Sucursales</Link>
-  <Link to="/users">Usuarios</Link>
-  <Link to="/parametros-sistema">Parámetros</Link>
+        <nav className="flex flex-col gap-3 mt-6 text-sm">
+  <Link className="hover:text-white" to="/dashboard">Dashboard</Link>
+  <Link className="hover:text-white" to="/vouchers">Vouchers</Link>
+  <Link className="hover:text-white" to="/conciliaciones">Conciliaciones</Link>
+  <Link className="hover:text-white" to="/redeban">RedeBan</Link>
+  <Link className="hover:text-white" to="/banco">Banco</Link>
+  <Link className="hover:text-white" to="/sucursales">Sucursales</Link>
+  <Link className="hover:text-white" to="/users">Usuarios</Link>
+  <Link className="hover:text-white" to="/logs">Logs</Link>
+  <Link className="hover:text-white" to="/parametros">Parámetros</Link>
 </nav>
+
 
       </aside>
 
