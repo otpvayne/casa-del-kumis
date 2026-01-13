@@ -32,3 +32,10 @@ export async function createVoucherDraft(input: {
   const res = await api.post("/vouchers/draft", input);
   return res.data;
 }
+export async function confirmVoucher(
+  id: number,
+  body: { totalVisa?: number; totalMastercard?: number; totalGlobal?: number; observacion?: string },
+) {
+  const res = await api.post(`/vouchers/${id}/confirm`, body);
+  return res.data;
+}
