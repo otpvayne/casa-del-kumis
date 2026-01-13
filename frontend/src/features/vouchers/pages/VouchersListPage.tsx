@@ -34,6 +34,13 @@ export default function VouchersListPage() {
         <button className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15" onClick={load}>
           Refrescar
         </button>
+        <button
+  className="px-4 py-2 rounded-xl bg-white text-black font-semibold"
+  onClick={() => nav("/vouchers/new")}
+>
+  Crear voucher
+</button>
+
       </div>
 
       {loading && <p className="mt-6 text-white/60">Cargando...</p>}

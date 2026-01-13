@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { fetchVoucherById } from "../api/vouchers.api";
 import VoucherStatusBadge from "../components/VoucherStatusBadge";
 import type { VoucherDetail } from "../types";
+import VoucherImageThumb from "../components/VoucherImageThumb";
 
 export default function VoucherDetailPage() {
   const { id } = useParams();
@@ -63,24 +64,23 @@ export default function VoucherDetailPage() {
       </div>
 
       {/* Imágenes */}
-      <div className="rounded-2xl border border-white/10 p-4">
-        <h2 className="text-lg font-semibold mb-3">Imágenes</h2>
-        {data.voucher_imagenes?.length ? (
-          <ul className="space-y-2 text-sm text-white/70">
-            {data.voucher_imagenes
-              .slice()
-              .sort((a, b) => a.orden - b.orden)
-              .map((img) => (
-                <li key={img.id} className="flex items-center justify-between">
-                  <span>Orden #{img.orden}</span>
-                  <span className="text-white/40 truncate max-w-[60%]">{img.ruta_imagen}</span>
-                </li>
-              ))}
-          </ul>
-        ) : (
-          <p className="text-white/60 text-sm">Sin imágenes aún.</p>
-        )}
-      </div>
+<div className="rounded-2xl border border-white/10 p-4">
+  <h2 className="text-lg font-semibold mb-3">Imágenes</h2>
+
+  {data.voucher_imagenes?.length ? (
+    <div className="flex flex-wrap gap-4">
+      {data.voucher_imagenes
+        .slice()
+        .sort((a, b) => a.orden - b.orden)
+        .map((img) => (
+          <VoucherImageThumb key={img.id} imageId={img.id} orden={img.orden} />
+        ))}
+    </div>
+  ) : (
+    <p className="text-white/60 text-sm">Sin imágenes aún.</p>
+  )}
+</div>
+
 
       {/* Transacciones */}
       <div className="rounded-2xl border border-white/10 p-4 overflow-x-auto">

@@ -11,6 +11,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  Res,
 } from '@nestjs/common';
 
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -18,7 +19,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Rol } from '@prisma/client';
-
+import type { Response } from "express";
 import { VouchersService } from './vouchers.service';
 import { UpdateVoucherDraftDto } from './dto/update-voucher-draft.dto';
 import { multerVoucherTmpConfig } from './multer-vouchers.config';
@@ -338,6 +339,15 @@ export class VouchersController {
 )
 async listVouchers() {
   return this.vouchersService.listVouchers();
+}
+@Get("imagenes/:imageId/file")
+@Roles(Rol.OPERATIVO, Rol.ADMIN, Rol.PROPIETARIO, Rol.DESARROLLADOR, Rol.SOPORTE)
+async getVoucherImageFile(
+  @Param("imageId", ParseIntPipe) imageId: number,
+  @Res() res: Response,
+) {
+  const filePath = await this.vouchersService.getVoucherImagePath(imageId);
+  return res.sendFile(filePath);
 }
 
 }

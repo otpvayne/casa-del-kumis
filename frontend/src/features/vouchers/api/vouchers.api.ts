@@ -25,3 +25,10 @@ export async function uploadVoucherImage(voucherId: number, file: File, orden?: 
   });
   return res.data;
 }
+export async function createVoucherDraft(input: {
+  sucursalId: number;
+  fechaOperacion: string; // YYYY-MM-DD
+}) {
+  const res = await api.post("/vouchers/draft", input);
+  return res.data;
+}

@@ -956,5 +956,20 @@ async listVouchers() {
 
   return this.serializeBigInt(vouchers);
 }
+async getVoucherImagePath(imageId: number): Promise<string> {
+  const img = await this.prisma.voucher_imagenes.findUnique({
+    where: { id: BigInt(imageId) as any },
+  });
+
+  if (!img) throw new NotFoundException("Imagen no encontrada");
+
+  const filePath = img.ruta_imagen;
+  if (!filePath || !fs.existsSync(filePath)) {
+    throw new NotFoundException("Archivo de imagen no existe en disco");
+  }
+
+  // sendFile necesita path absoluto
+  return path.resolve(filePath);
+}
 
 }

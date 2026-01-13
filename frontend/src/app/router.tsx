@@ -15,6 +15,8 @@ import SucursalesPage from "../pages/sucursales/SucursalesPage";
 import UsersPage from "../pages/users/UsersPage";
 import VouchersListPage from "../features/vouchers/pages/VouchersListPage";
 import VoucherDetailPage from "../features/vouchers/pages/VoucherDetailPage";
+import CreateVoucherDraftPage from "../features/vouchers/pages/CreateVoucherDraftPage";
+
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -48,6 +50,8 @@ export const router = createBrowserRouter([
 { path: "/conciliaciones", element: <ConciliacionesPage /> },
 { path: "/vouchers", element: <VouchersListPage /> },
 { path: "/vouchers/:id", element: <VoucherDetailPage /> },
+{ path: "/vouchers/new", element: <CreateVoucherDraftPage /> },
+
 
             ],
           },
