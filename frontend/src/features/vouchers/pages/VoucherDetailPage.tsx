@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../../../lib/api"; // ajusta si tu api está en otra ruta
-
+import { uploadVoucherImage } from "../api/vouchers.api";
 type VoucherTx = {
   id: string;
   franquicia: "VISA" | "MASTERCARD";
@@ -62,6 +62,8 @@ export default function VoucherDetailPage() {
   const [voucher, setVoucher] = useState<Voucher | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputId = "voucher-image-input";
 
   useEffect(() => {
     let mounted = true;
@@ -85,10 +87,10 @@ export default function VoucherDetailPage() {
     };
   }, [id]);
 
-  const orderedImages = useMemo(() => {
-    const imgs = voucher?.voucher_imagenes ?? [];
-    return [...imgs].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
-  }, [voucher]);
+  const orderedImages = (voucher?.voucher_imagenes ?? []).slice().sort((a: any, b: any) => {
+  return (a.orden ?? 0) - (b.orden ?? 0);
+});
+
 
   if (loading) return <div className="text-white/70">Cargando...</div>;
   if (err) return <div className="text-red-300">Error: {err}</div>;
@@ -131,12 +133,48 @@ export default function VoucherDetailPage() {
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">Imágenes</h2>
           {/* Por ahora solo UI, luego conectamos el botón a upload multi-imagen */}
-          <button
-            className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 border border-white/10 text-sm"
-            onClick={() => alert("Luego conectamos esto al endpoint POST /vouchers/:id/imagenes")}
-          >
-            Subir imagen
-          </button>
+          <input
+  id={fileInputId}
+  type="file"
+  accept="image/*"
+  className="hidden"
+  onChange={async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+
+      // calcula orden siguiente automáticamente
+      const nextOrden =
+        (orderedImages.reduce((max: number, img: any) => Math.max(max, img.orden ?? 0), 0) || 0) + 1;
+
+      await uploadVoucherImage({
+        voucherId: Number(voucher.id),
+        file,
+        orden: nextOrden,
+      });
+
+      // recargar voucher para ver la imagen nueva
+      const { data } = await api.get(`/vouchers/${voucher.id}`);
+      setVoucher(data);
+    } catch (err: any) {
+      alert(err?.response?.data?.message ?? "Error subiendo imagen");
+    } finally {
+      setUploading(false);
+      e.target.value = ""; // permite volver a subir el mismo archivo
+    }
+  }}
+/>
+
+<button
+  className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 border border-white/10 text-sm disabled:opacity-60"
+  disabled={uploading}
+  onClick={() => document.getElementById(fileInputId)?.click()}
+>
+  {uploading ? "Subiendo..." : "Subir imagen"}
+</button>
+
         </div>
 
         {orderedImages.length === 0 ? (

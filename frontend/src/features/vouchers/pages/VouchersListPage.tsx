@@ -1,3 +1,4 @@
+// VouchersListPage.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import VoucherStatusBadge from "../components/VoucherStatusBadge";
@@ -25,22 +26,28 @@ export default function VouchersListPage() {
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   return (
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Vouchers</h1>
-        <button className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15" onClick={load}>
+
+        <button
+          className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15"
+          onClick={load}
+        >
           Refrescar
         </button>
-        <button
-  className="px-4 py-2 rounded-xl bg-white text-black font-semibold"
-  onClick={() => nav("/vouchers/new")}
->
-  Crear voucher
-</button>
 
+        <button
+          className="px-4 py-2 rounded-xl bg-white text-black font-semibold"
+          onClick={() => nav("/vouchers/new")}
+        >
+          Crear voucher
+        </button>
       </div>
 
       {loading && <p className="mt-6 text-white/60">Cargando...</p>}
@@ -61,13 +68,22 @@ export default function VouchersListPage() {
             </thead>
             <tbody>
               {items.map((v) => (
-                <tr key={v.id} className="border-t border-white/10 hover:bg-white/5">
+                <tr
+                  key={v.id}
+                  className="border-t border-white/10 hover:bg-white/5"
+                >
                   <td className="p-3">{v.id}</td>
-                  <td className="p-3">{new Date(v.fecha_operacion).toLocaleDateString()}</td>
-                  <td className="p-3">{v.sucursales?.nombre ?? v.sucursal_id}</td>
-                  <td className="p-3"><VoucherStatusBadge estado={v.estado} /></td>
                   <td className="p-3">
-                    ${Number(v.total_global).toLocaleString("es-CO")}
+                    {new Date(v.fecha_operacion).toLocaleDateString()}
+                  </td>
+                  <td className="p-3">
+                    {v.sucursales?.nombre ?? v.sucursal_id}
+                  </td>
+                  <td className="p-3">
+                    <VoucherStatusBadge estado={v.estado} />
+                  </td>
+                  <td className="p-3">
+                    ${Number(v.total_global ?? 0).toLocaleString("es-CO")}
                   </td>
                   <td className="p-3 flex gap-2 justify-end">
                     <button
@@ -76,9 +92,10 @@ export default function VouchersListPage() {
                     >
                       Ver detalle
                     </button>
+
                     <button
                       className="px-3 py-1 rounded-lg bg-white text-black font-semibold"
-                      onClick={() => setUploadFor(Number(v.id))}
+                      onClick={() => setUploadFor(Number(v.id))} // 🔥 CLAVE
                     >
                       Subir imágenes
                     </button>
@@ -92,8 +109,8 @@ export default function VouchersListPage() {
 
       <UploadImagesModal
         open={uploadFor !== null}
+        voucherId={uploadFor ?? 0} // 🔥 number garantizado
         onClose={() => setUploadFor(null)}
-        voucherId={uploadFor ?? 0}
         onUploaded={load}
       />
     </div>

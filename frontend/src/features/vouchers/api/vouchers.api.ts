@@ -15,16 +15,30 @@ export async function fetchVoucherById(id: string | number) {
   return res.data;
 }
 
-export async function uploadVoucherImage(voucherId: number, file: File, orden?: number) {
+export async function uploadVoucherImage(
+  voucherId: number,
+  file: File,
+  orden?: number
+) {
   const form = new FormData();
-  form.append("image", file);
-  if (orden !== undefined) form.append("orden", String(orden));
 
-  const res = await api.post(`/vouchers/${voucherId}/imagenes`, form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  // 🔥 CLAVE: debe llamarse "image"
+  form.append("image", file);
+
+  if (orden !== undefined) {
+    form.append("orden", String(orden));
+  }
+
+  const res = await api.post(
+    `/vouchers/${voucherId}/imagenes`,
+    form
+    // ❌ NO pongas headers
+  );
+
   return res.data;
 }
+
+
 export async function createVoucherDraft(input: {
   sucursalId: number;
   fechaOperacion: string; // YYYY-MM-DD
