@@ -23,7 +23,6 @@ export default function UploadImagesModal({
       setErr("");
       setLoading(true);
 
-      // Subimos en orden 1..N
       for (let i = 0; i < files.length; i++) {
         await uploadVoucherImage(voucherId, files[i], i + 1);
       }
@@ -39,7 +38,7 @@ export default function UploadImagesModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
       <div className="w-full max-w-lg rounded-2xl bg-neutral-950 border border-white/10 p-6">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Subir imágenes</h3>

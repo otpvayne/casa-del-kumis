@@ -1,7 +1,7 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
-import VouchersPage from "../pages/vouchers/VouchersPage";
+
 import NotFoundPage from "../pages/NotFoundPage";
 import UnauthorizedPage from "../pages/UnauthorizedPage";
 import AdminLayout from "../layouts/AdminLayout";
@@ -13,6 +13,8 @@ import ParametrosSistemaPage from "../pages/parametros/ParametrosPage";
 import RedeBanPage from "../pages/redeban/RedeBanPage";
 import SucursalesPage from "../pages/sucursales/SucursalesPage";
 import UsersPage from "../pages/users/UsersPage";
+import VouchersListPage from "../features/vouchers/pages/VouchersListPage";
+import VoucherDetailPage from "../features/vouchers/pages/VoucherDetailPage";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -44,7 +46,8 @@ export const router = createBrowserRouter([
 { path: "/redeban", element: <RedeBanPage /> },
 { path: "/banco", element: <BancoPage /> },
 { path: "/conciliaciones", element: <ConciliacionesPage /> },
-{ path: "/vouchers", element: <VouchersPage /> },
+{ path: "/vouchers", element: <VouchersListPage /> },
+{ path: "/vouchers/:id", element: <VoucherDetailPage /> },
 
             ],
           },

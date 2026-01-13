@@ -15,11 +15,6 @@ export async function fetchVoucherById(id: string | number) {
   return res.data;
 }
 
-export async function createVoucherDraft(payload: { sucursalId: number; fechaOperacion: string }) {
-  const res = await api.post("/vouchers/draft", payload);
-  return res.data;
-}
-
 export async function uploadVoucherImage(voucherId: number, file: File, orden?: number) {
   const form = new FormData();
   form.append("image", file);

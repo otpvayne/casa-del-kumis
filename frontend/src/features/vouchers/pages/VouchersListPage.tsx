@@ -67,7 +67,7 @@ export default function VouchersListPage() {
                       className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/15"
                       onClick={() => nav(`/vouchers/${v.id}`)}
                     >
-                      Ver
+                      Ver detalle
                     </button>
                     <button
                       className="px-3 py-1 rounded-lg bg-white text-black font-semibold"
