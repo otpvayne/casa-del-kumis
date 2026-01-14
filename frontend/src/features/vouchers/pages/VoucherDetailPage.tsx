@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../../../lib/api";
+import VoucherImageViewer from "../components/VoucherImageViewer";
 import {
   uploadVoucherImage,
   confirmVoucher,
   deleteVoucherImage,
   reorderVoucherImages,
   autosaveVoucherDraft,
-  fetchVoucherAudit
+  fetchVoucherAudit,
+  
 } from "../api/vouchers.api";
 
 /* =======================
@@ -155,12 +157,18 @@ export default function VoucherDetailPage() {
   );
 
   return (
-    <div className="space-y-6">
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-100px)]">
+
+    {/* IZQUIERDA – INFO */}
+    <div className="lg:col-span-2 space-y-6 overflow-y-auto pr-2">
+
       {/* HEADER */}
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-semibold">Voucher #{voucher.id}</h1>
-          <p className="text-white/60 text-sm">{voucher.sucursales?.nombre}</p>
+          <p className="text-white/60 text-sm">
+            {voucher.sucursales?.nombre}
+          </p>
 
           {!isLocked && (
             <button
@@ -173,7 +181,9 @@ export default function VoucherDetailPage() {
           )}
 
           {saving && (
-            <p className="text-xs text-white/40 mt-1">Guardando cambios…</p>
+            <p className="text-xs text-white/40 mt-1">
+              Guardando cambios…
+            </p>
           )}
         </div>
 
@@ -186,7 +196,7 @@ export default function VoucherDetailPage() {
         </span>
       </div>
 
-      {/* TOTALS */}
+      {/* TOTALES */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card label="Fecha" value={voucher.fecha_operacion} />
         <EditableCard
@@ -221,70 +231,7 @@ export default function VoucherDetailPage() {
         </p>
       )}
 
-      {/* IMAGES */}
-      <section className="bg-white/5 border border-white/10 rounded-xl p-4">
-        <div className="flex justify-between">
-          <h2 className="font-semibold">Imágenes</h2>
-
-          {!isLocked && (
-            <>
-              <input
-                id={fileInputId}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-
-                  setUploading(true);
-                  await uploadVoucherImage(
-                    Number(voucher.id),
-                    file,
-                    orderedImages.length + 1
-                  );
-                  await loadVoucher();
-                  setUploading(false);
-                }}
-              />
-              <button
-                onClick={() =>
-                  document.getElementById(fileInputId)?.click()
-                }
-                className="px-3 py-1 rounded bg-white/10"
-              >
-                {uploading ? "Subiendo..." : "Subir imagen"}
-              </button>
-            </>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-          {orderedImages.map((img) => (
-            <div key={img.id} className="relative">
-              <img
-                src={toPublicUploadUrl(img.ruta_imagen) ?? ""}
-                className="h-40 w-full object-cover rounded-lg border border-white/10"
-              />
-
-              {!isLocked && (
-                <button
-                  onClick={async () => {
-                    if (!confirm("¿Eliminar esta imagen?")) return;
-                    await deleteVoucherImage(Number(img.id));
-                    await loadVoucher();
-                  }}
-                  className="absolute top-1 right-1 text-xs bg-black/70 text-red-300 px-2 py-1 rounded"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* TRANSACTIONS */}
+      {/* TRANSACCIONES */}
       <section className="bg-white/5 border border-white/10 rounded-xl p-4">
         <h2 className="font-semibold mb-3">Transacciones</h2>
 
@@ -326,7 +273,18 @@ export default function VoucherDetailPage() {
         </table>
       </section>
     </div>
-  );
+
+    {/* DERECHA – IMAGEN FIJA */}
+    <div className="lg:col-span-1 sticky top-6 h-[calc(100vh-120px)] overflow-y-auto">
+      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+        <h2 className="font-semibold mb-3">Voucher</h2>
+
+        <VoucherImageViewer images={voucher.voucher_imagenes} />
+      </div>
+    </div>
+
+  </div>
+);
 }
 
 /* =======================
@@ -355,7 +313,9 @@ function EditableCard({
   return (
     <div className="bg-white/5 border border-white/10 rounded-xl p-4">
       <p className="text-white/60 text-xs">{label}</p>
+
       <input
+        type="text"
         disabled={disabled}
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
