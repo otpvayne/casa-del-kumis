@@ -65,6 +65,16 @@ function formatCOP(v: string | number | null) {
   if (!v) return "—";
   return Number(v).toLocaleString("es-CO");
 }
+function mapTransaccionesForDraft(
+  transacciones: any[]
+) {
+  return transacciones.map(t => ({
+    franquicia: t.franquicia,
+    monto: Number(t.monto),
+    numero_recibo: t.numero_recibo || null,
+    ultimos_digitos: t.ultimos_digitos || null,
+  }));
+}
 
 /* =======================
    COMPONENT
@@ -92,31 +102,7 @@ export default function VoucherDetailPage() {
     loadVoucher().finally(() => setLoading(false));
   }, [id]);
 
-  /* =======================
-     AUTOSAVE (DRAFT)
-  ======================= */
-  useEffect(() => {
-    if (!voucher || voucher.estado !== "DRAFT") return;
-
-    const timeout = setTimeout(async () => {
-      try {
-        setSaving(true);
-        await updateVoucherDraft(Number(voucher.id), {
-          totalVisa: Number(voucher.total_visa) || undefined,
-          totalMastercard: Number(voucher.total_mastercard) || undefined,
-          totalGlobal: Number(voucher.total_global) || undefined,
-          transacciones: voucher.voucher_transacciones,
-        });
-      } catch (e) {
-        console.error("Autosave error", e);
-      } finally {
-        setSaving(false);
-      }
-    }, 800);
-
-    return () => clearTimeout(timeout);
-  }, [voucher]);
-
+ 
   /* =======================
      CONFIRM
   ======================= */
@@ -136,6 +122,30 @@ export default function VoucherDetailPage() {
       setConfirming(false);
     }
   }
+async function handleSave() {
+  if (!voucher) return;
+
+  try {
+    setSaving(true);
+
+    await autosaveVoucherDraft(Number(voucher.id), {
+      totalVisa: Number(voucher.total_visa) || undefined,
+      totalMastercard: Number(voucher.total_mastercard) || undefined,
+      totalGlobal: Number(voucher.total_global) || undefined,
+      transacciones: mapTransaccionesForDraft(
+        voucher.voucher_transacciones || []
+      ),
+    });
+
+    alert("✅ Cambios guardados correctamente");
+  } catch (e) {
+    console.error(e);
+    alert("❌ Error al guardar cambios");
+  } finally {
+    setSaving(false);
+  }
+}
+
 
   /* =======================
      CALCULATIONS
@@ -171,14 +181,26 @@ export default function VoucherDetailPage() {
           </p>
 
           {!isLocked && (
-            <button
-              onClick={handleConfirm}
-              disabled={confirming}
-              className="mt-3 px-4 py-2 rounded-xl bg-emerald-500 text-black font-semibold"
-            >
-              {confirming ? "Confirmando..." : "Confirmar voucher"}
-            </button>
-          )}
+  <div className="mt-3 flex gap-3">
+    <button
+      onClick={handleSave}
+      disabled={saving}
+      className="px-4 py-2 rounded-xl bg-sky-500 text-black font-semibold"
+    >
+      {saving ? "Guardando..." : "Guardar cambios"}
+    </button>
+
+    <button
+      onClick={handleConfirm}
+      disabled={confirming}
+      className="px-4 py-2 rounded-xl bg-emerald-500 text-black font-semibold"
+    >
+      {confirming ? "Confirmando..." : "Confirmar voucher"}
+    </button>
+  </div>
+)}
+
+
 
           {saving && (
             <p className="text-xs text-white/40 mt-1">
