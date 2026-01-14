@@ -128,14 +128,14 @@ export default function VouchersListPage() {
             className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15"
             onClick={load}
           >
-            🔄 Refrescar
+             Refrescar
           </button>
 
           <button
             className="px-4 py-2 rounded-xl bg-white text-black font-semibold"
             onClick={() => nav("/vouchers/new")}
           >
-            ➕ Crear voucher
+             Crear voucher
           </button>
         </div>
       </div>
@@ -183,7 +183,7 @@ export default function VouchersListPage() {
               className="w-full px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15"
               onClick={clearFilters}
             >
-              🗑️ Limpiar filtros
+               Limpiar filtros
             </button>
           </div>
         </div>
@@ -242,14 +242,14 @@ export default function VouchersListPage() {
                             className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-xs"
                             onClick={() => nav(`/vouchers/${v.id}`)}
                           >
-                            👁️ Ver
+                             Ver
                           </button>
 
                           <button
                             className="px-3 py-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-xs"
                             onClick={() => setUploadFor(Number(v.id))}
                           >
-                            📤 Subir
+                             Subir
                           </button>
 
                           {canDelete && (
@@ -258,7 +258,7 @@ export default function VouchersListPage() {
                               onClick={() => handleDelete(Number(v.id), v.id)}
                               title="Eliminar voucher"
                             >
-                              🗑️ Eliminar
+                               Eliminar
                             </button>
                           )}
                         </div>
