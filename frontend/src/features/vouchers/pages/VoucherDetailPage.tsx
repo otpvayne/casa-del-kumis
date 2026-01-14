@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../../../lib/api";
-import { uploadVoucherImage, confirmVoucher } from "../api/vouchers.api";
+import {
+  uploadVoucherImage,
+  confirmVoucher,
+  deleteVoucherImage,
+  reorderVoucherImages,
+  autosaveVoucherDraft,
+  fetchVoucherAudit
+} from "../api/vouchers.api";
 
 /* =======================
    TYPES
@@ -24,11 +31,10 @@ type Voucher = {
   id: string;
   sucursal_id: string;
   fecha_operacion: string;
-  estado: string;
+  estado: "DRAFT" | "CONFIRMADO";
   total_visa: string | null;
   total_mastercard: string | null;
   total_global: string | null;
-  precision_ocr: string | null;
   voucher_transacciones: VoucherTx[];
   voucher_imagenes: VoucherImagen[];
   sucursales?: {
@@ -41,9 +47,9 @@ type Voucher = {
    HELPERS
 ======================= */
 function badgeClass(estado: string) {
-  if (estado === "CONFIRMADO")
-    return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
-  return "bg-sky-500/15 text-sky-300 border-sky-500/30";
+  return estado === "CONFIRMADO"
+    ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+    : "bg-sky-500/15 text-sky-300 border-sky-500/30";
 }
 
 function toPublicUploadUrl(ruta: string) {
@@ -53,9 +59,9 @@ function toPublicUploadUrl(ruta: string) {
   return `http://localhost:3000${normalized.slice(idx)}`;
 }
 
-function formatCOP(value: string | number | null) {
-  if (!value) return "—";
-  return Number(value).toLocaleString("es-CO");
+function formatCOP(v: string | number | null) {
+  if (!v) return "—";
+  return Number(v).toLocaleString("es-CO");
 }
 
 /* =======================
@@ -67,6 +73,7 @@ export default function VoucherDetailPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const isLocked = voucher?.estado === "CONFIRMADO";
   const fileInputId = "voucher-upload-input";
@@ -82,6 +89,31 @@ export default function VoucherDetailPage() {
   useEffect(() => {
     loadVoucher().finally(() => setLoading(false));
   }, [id]);
+
+  /* =======================
+     AUTOSAVE (DRAFT)
+  ======================= */
+  useEffect(() => {
+    if (!voucher || voucher.estado !== "DRAFT") return;
+
+    const timeout = setTimeout(async () => {
+      try {
+        setSaving(true);
+        await updateVoucherDraft(Number(voucher.id), {
+          totalVisa: Number(voucher.total_visa) || undefined,
+          totalMastercard: Number(voucher.total_mastercard) || undefined,
+          totalGlobal: Number(voucher.total_global) || undefined,
+          transacciones: voucher.voucher_transacciones,
+        });
+      } catch (e) {
+        console.error("Autosave error", e);
+      } finally {
+        setSaving(false);
+      }
+    }, 800);
+
+    return () => clearTimeout(timeout);
+  }, [voucher]);
 
   /* =======================
      CONFIRM
@@ -128,9 +160,7 @@ export default function VoucherDetailPage() {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-semibold">Voucher #{voucher.id}</h1>
-          <p className="text-white/60 text-sm">
-            {voucher.sucursales?.nombre}
-          </p>
+          <p className="text-white/60 text-sm">{voucher.sucursales?.nombre}</p>
 
           {!isLocked && (
             <button
@@ -140,6 +170,10 @@ export default function VoucherDetailPage() {
             >
               {confirming ? "Confirmando..." : "Confirmar voucher"}
             </button>
+          )}
+
+          {saving && (
+            <p className="text-xs text-white/40 mt-1">Guardando cambios…</p>
           )}
         </div>
 
@@ -205,11 +239,10 @@ export default function VoucherDetailPage() {
 
                   setUploading(true);
                   await uploadVoucherImage(
-  Number(voucher.id),
-  file,
-  orderedImages.length + 1
-);
-
+                    Number(voucher.id),
+                    file,
+                    orderedImages.length + 1
+                  );
                   await loadVoucher();
                   setUploading(false);
                 }}
@@ -220,7 +253,7 @@ export default function VoucherDetailPage() {
                 }
                 className="px-3 py-1 rounded bg-white/10"
               >
-                Subir imagen
+                {uploading ? "Subiendo..." : "Subir imagen"}
               </button>
             </>
           )}
@@ -228,11 +261,25 @@ export default function VoucherDetailPage() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
           {orderedImages.map((img) => (
-            <img
-              key={img.id}
-              src={toPublicUploadUrl(img.ruta_imagen) ?? ""}
-              className="h-40 object-cover rounded-lg border border-white/10"
-            />
+            <div key={img.id} className="relative">
+              <img
+                src={toPublicUploadUrl(img.ruta_imagen) ?? ""}
+                className="h-40 w-full object-cover rounded-lg border border-white/10"
+              />
+
+              {!isLocked && (
+                <button
+                  onClick={async () => {
+                    if (!confirm("¿Eliminar esta imagen?")) return;
+                    await deleteVoucherImage(Number(img.id));
+                    await loadVoucher();
+                  }}
+                  className="absolute top-1 right-1 text-xs bg-black/70 text-red-300 px-2 py-1 rounded"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           ))}
         </div>
       </section>
@@ -242,8 +289,8 @@ export default function VoucherDetailPage() {
         <h2 className="font-semibold mb-3">Transacciones</h2>
 
         <table className="w-full text-sm">
-          <thead>
-            <tr className="text-white/60">
+          <thead className="text-white/60">
+            <tr>
               <th>Franquicia</th>
               <th>Recibo</th>
               <th>Monto</th>
@@ -283,7 +330,7 @@ export default function VoucherDetailPage() {
 }
 
 /* =======================
-   COMPONENTS
+   UI COMPONENTS
 ======================= */
 function Card({ label, value }: { label: string; value: string }) {
   return (

@@ -53,3 +53,58 @@ export async function confirmVoucher(
   const res = await api.post(`/vouchers/${id}/confirm`, body);
   return res.data;
 }
+// =======================
+// IMÁGENES
+// =======================
+
+export async function deleteVoucherImage(
+  voucherId: number,
+  imageId: number
+) {
+  const res = await api.delete(
+    `/vouchers/${voucherId}/imagenes/${imageId}`
+  );
+  return res.data;
+}
+
+export async function reorderVoucherImages(
+  voucherId: number,
+  ordenes: { id: number; orden: number }[]
+) {
+  const res = await api.patch(
+    `/vouchers/${voucherId}/imagenes/reorder`,
+    { ordenes }
+  );
+  return res.data;
+}
+
+// =======================
+// AUTOSAVE DRAFT
+// =======================
+
+export async function autosaveVoucherDraft(
+  voucherId: number,
+  body: {
+    totalVisa?: string;
+    totalMastercard?: string;
+    totalGlobal?: string;
+    transacciones?: {
+      id: string;
+      monto: string;
+    }[];
+  }
+) {
+  const res = await api.patch(`/vouchers/${voucherId}/draft`, body);
+  return res.data;
+}
+
+// =======================
+// AUDITORÍA / HISTORIAL
+// =======================
+
+export async function fetchVoucherAudit(voucherId: number) {
+  const res = await api.get(
+    `/vouchers/${voucherId}/audit`
+  );
+  return res.data;
+}
