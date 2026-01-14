@@ -130,3 +130,19 @@ export async function fetchVoucherAudit(voucherId: number) {
   );
   return res.data;
 }
+
+// =======================
+// DELETE
+// =======================
+
+export async function deleteVoucher(voucherId: number) {
+  try {
+    const res = await api.delete(`/vouchers/${voucherId}`);
+    return res.data;
+  } catch (error: any) {
+    console.error("Error eliminando voucher:", error);
+    console.error("Response data:", error.response?.data);
+    console.error("Headers enviados:", error.config?.headers);
+    throw error;
+  }
+}

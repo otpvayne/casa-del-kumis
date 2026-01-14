@@ -206,7 +206,7 @@ export default function VoucherDetailPage() {
                   onClick={() => setShowUploadModal(true)}
                   className="px-4 py-2 rounded-xl bg-white text-black font-semibold"
                 >
-                  📤 Subir imágenes
+                   Subir imágenes
                 </button>
               </div>
             )}
@@ -284,7 +284,7 @@ export default function VoucherDetailPage() {
                 });
               }}
             >
-              ➕ Agregar transacción
+               Agregar transacción
             </button>
           )}
 

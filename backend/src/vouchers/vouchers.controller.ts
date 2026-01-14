@@ -316,7 +316,7 @@ export class VouchersController {
   }
 
   @Delete(':id')
-  @Roles(Rol.ADMIN, Rol.DESARROLLADOR)
+  @Roles(Rol.ADMIN, Rol.DESARROLLADOR, Rol.PROPIETARIO)
   @ApiOperation({
     summary: 'Eliminar voucher (solo para limpieza/pruebas)',
   })
