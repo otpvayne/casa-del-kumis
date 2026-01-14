@@ -234,43 +234,144 @@ export default function VoucherDetailPage() {
       {/* TRANSACCIONES */}
       <section className="bg-white/5 border border-white/10 rounded-xl p-4">
         <h2 className="font-semibold mb-3">Transacciones</h2>
+{!isLocked && (
+  <button
+    className="mb-3 px-3 py-1 rounded bg-white/10 hover:bg-white/15 text-sm"
+    onClick={() => {
+      setVoucher({
+        ...voucher,
+        voucher_transacciones: [
+          ...voucher.voucher_transacciones,
+          {
+            id: crypto.randomUUID(), // temporal (backend lo reemplaza)
+            franquicia: "VISA",
+            ultimos_digitos: "",
+            numero_recibo: "",
+            monto: "",
+          },
+        ],
+      });
+    }}
+  >
+    ➕ Agregar transacción
+  </button>
+)}
 
         <table className="w-full text-sm">
-          <thead className="text-white/60">
-            <tr>
-              <th>Franquicia</th>
-              <th>Recibo</th>
-              <th>Monto</th>
-            </tr>
-          </thead>
-          <tbody>
-            {voucher.voucher_transacciones.map((t) => (
-              <tr key={t.id}>
-                <td>{t.franquicia}</td>
-                <td>{t.numero_recibo ?? "—"}</td>
-                <td>
-                  <input
-                    disabled={isLocked}
-                    value={t.monto}
-                    className="bg-transparent border border-white/10 rounded px-2 py-1 w-24"
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setVoucher({
-                        ...voucher,
-                        voucher_transacciones:
-                          voucher.voucher_transacciones.map((tx) =>
-                            tx.id === t.id
-                              ? { ...tx, monto: value }
-                              : tx
-                          ),
-                      });
-                    }}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  <thead className="text-white/60">
+    <tr>
+      <th className="text-left">Franquicia</th>
+      <th className="text-left">Recibo</th>
+      <th className="text-left">Últ. dígitos</th>
+      <th className="text-left">Monto</th>
+      {!isLocked && <th></th>}
+    </tr>
+  </thead>
+
+  <tbody>
+    {voucher.voucher_transacciones.map((t) => (
+      <tr key={t.id} className="border-t border-white/5">
+        {/* FRANQUICIA */}
+        <td className="py-2">
+          <select
+            disabled={isLocked}
+            value={t.franquicia}
+            className="bg-transparent border border-white/10 rounded px-2 py-1"
+            onChange={(e) => {
+              const value = e.target.value as "VISA" | "MASTERCARD";
+              setVoucher({
+                ...voucher,
+                voucher_transacciones: voucher.voucher_transacciones.map((tx) =>
+                  tx.id === t.id ? { ...tx, franquicia: value } : tx
+                ),
+              });
+            }}
+          >
+            <option value="VISA">VISA</option>
+            <option value="MASTERCARD">MASTERCARD</option>
+          </select>
+        </td>
+
+        {/* RECIBO */}
+        <td>
+          <input
+            disabled={isLocked}
+            value={t.numero_recibo ?? ""}
+            className="bg-transparent border border-white/10 rounded px-2 py-1 w-28"
+            onChange={(e) => {
+              const value = e.target.value;
+              setVoucher({
+                ...voucher,
+                voucher_transacciones: voucher.voucher_transacciones.map((tx) =>
+                  tx.id === t.id ? { ...tx, numero_recibo: value } : tx
+                ),
+              });
+            }}
+          />
+        </td>
+
+        {/* ÚLTIMOS DÍGITOS */}
+        <td>
+          <input
+            disabled={isLocked}
+            maxLength={4}
+            placeholder="1234"
+            value={t.ultimos_digitos ?? ""}
+            className="bg-transparent border border-white/10 rounded px-2 py-1 w-20"
+            onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, "");
+              setVoucher({
+                ...voucher,
+                voucher_transacciones: voucher.voucher_transacciones.map((tx) =>
+                  tx.id === t.id ? { ...tx, ultimos_digitos: value } : tx
+                ),
+              });
+            }}
+          />
+        </td>
+
+        {/* MONTO */}
+        <td>
+          <input
+            disabled={isLocked}
+            value={t.monto}
+            className="bg-transparent border border-white/10 rounded px-2 py-1 w-28"
+            onChange={(e) => {
+              const value = e.target.value;
+              setVoucher({
+                ...voucher,
+                voucher_transacciones: voucher.voucher_transacciones.map((tx) =>
+                  tx.id === t.id ? { ...tx, monto: value } : tx
+                ),
+              });
+            }}
+          />
+        </td>
+
+        {/* DELETE */}
+        {!isLocked && (
+          <td>
+            <button
+              className="text-red-400 hover:text-red-300"
+              onClick={() => {
+                if (!confirm("¿Eliminar esta transacción?")) return;
+                setVoucher({
+                  ...voucher,
+                  voucher_transacciones: voucher.voucher_transacciones.filter(
+                    (tx) => tx.id !== t.id
+                  ),
+                });
+              }}
+            >
+              ✕
+            </button>
+          </td>
+        )}
+      </tr>
+    ))}
+  </tbody>
+</table>
+
       </section>
     </div>
 
