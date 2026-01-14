@@ -7,11 +7,13 @@ import type { VoucherListItem } from "../types";
 
 export default function VouchersListPage() {
   const [items, setItems] = useState<VoucherListItem[]>([]);
+  const [allItems, setAllItems] = useState<VoucherListItem[]>([]); // Guardar todos los items
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingSucursales, setLoadingSucursales] = useState(true);
   const [err, setErr] = useState("");
   const [uploadFor, setUploadFor] = useState<number | null>(null);
+  const [canDelete, setCanDelete] = useState(true); // Control de permisos
   
   // Estados para filtros
   const [filterSucursal, setFilterSucursal] = useState<string>("");
@@ -39,18 +41,12 @@ export default function VouchersListPage() {
       setErr("");
       setLoading(true);
       
-      const params: { sucursalId?: number; fecha?: string } = {};
+      // Siempre cargar todos los vouchers
+      const data = await fetchVouchers();
+      setAllItems(data);
       
-      if (filterSucursal) {
-        params.sucursalId = Number(filterSucursal);
-      }
-      
-      if (filterFecha) {
-        params.fecha = filterFecha;
-      }
-      
-      const data = await fetchVouchers(params);
-      setItems(data);
+      // Aplicar filtros en el frontend
+      applyFilters(data);
     } catch (e: any) {
       setErr(e?.message ?? "Error cargando vouchers");
     } finally {
@@ -58,9 +54,40 @@ export default function VouchersListPage() {
     }
   }
 
+  // Función para aplicar filtros localmente
+  function applyFilters(data: VoucherListItem[] = allItems) {
+    let filtered = [...data];
+    
+    // Filtrar por sucursal
+    if (filterSucursal) {
+      filtered = filtered.filter(
+        (v) => String(v.sucursal_id) === filterSucursal
+      );
+    }
+    
+    // Filtrar por fecha
+    if (filterFecha) {
+      filtered = filtered.filter(
+        (v) => v.fecha_operacion.startsWith(filterFecha)
+      );
+    }
+    
+    console.log("Filtros aplicados:", { filterSucursal, filterFecha });
+    console.log("Items filtrados:", filtered.length, "de", data.length);
+    
+    setItems(filtered);
+  }
+
   useEffect(() => {
     load();
-  }, [filterSucursal, filterFecha]); // Recargar cuando cambien los filtros
+  }, []); // Solo cargar una vez al inicio
+
+  // Aplicar filtros cuando cambien
+  useEffect(() => {
+    if (allItems.length > 0) {
+      applyFilters();
+    }
+  }, [filterSucursal, filterFecha, allItems]);
 
   async function handleDelete(voucherId: number, voucherNum: string) {
     if (!confirm(`¿Estás seguro de eliminar el voucher #${voucherNum}?\n\nEsta acción no se puede deshacer.`)) {
@@ -76,7 +103,8 @@ export default function VouchersListPage() {
       
       // Manejar diferentes tipos de errores
       if (e?.response?.status === 403) {
-        alert(`❌ No tienes permisos para eliminar este voucher.\n\nDetalles: ${e?.response?.data?.message ?? "Acceso denegado"}`);
+        setCanDelete(false); // Ocultar botones de eliminar
+        alert(`❌ No tienes permisos para eliminar vouchers.\n\nContacta al administrador si necesitas este acceso.`);
       } else if (e?.response?.status === 401) {
         alert("❌ Tu sesión ha expirado. Por favor, vuelve a iniciar sesión.");
       } else {
@@ -224,12 +252,15 @@ export default function VouchersListPage() {
                             📤 Subir
                           </button>
 
-                          <button
-                            className="px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs"
-                            onClick={() => handleDelete(Number(v.id), v.id)}
-                          >
-                            🗑️ Eliminar
-                          </button>
+                          {canDelete && (
+                            <button
+                              className="px-3 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs"
+                              onClick={() => handleDelete(Number(v.id), v.id)}
+                              title="Eliminar voucher"
+                            >
+                              🗑️ Eliminar
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
