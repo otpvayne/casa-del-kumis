@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../../../lib/api";
 import VoucherImageViewer from "../components/VoucherImageViewer";
+import UploadImagesModal from "../components/UploadImagesModal";
 import {
   uploadVoucherImage,
   confirmVoucher,
@@ -65,6 +66,7 @@ function formatCOP(v: string | number | null) {
   if (!v) return "—";
   return Number(v).toLocaleString("es-CO");
 }
+
 function mapTransaccionesForDraft(
   transacciones: any[]
 ) {
@@ -86,6 +88,7 @@ export default function VoucherDetailPage() {
   const [uploading, setUploading] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const isLocked = voucher?.estado === "CONFIRMADO";
   const fileInputId = "voucher-upload-input";
@@ -122,30 +125,30 @@ export default function VoucherDetailPage() {
       setConfirming(false);
     }
   }
-async function handleSave() {
-  if (!voucher) return;
 
-  try {
-    setSaving(true);
+  async function handleSave() {
+    if (!voucher) return;
 
-    await autosaveVoucherDraft(Number(voucher.id), {
-      totalVisa: Number(voucher.total_visa) || undefined,
-      totalMastercard: Number(voucher.total_mastercard) || undefined,
-      totalGlobal: Number(voucher.total_global) || undefined,
-      transacciones: mapTransaccionesForDraft(
-        voucher.voucher_transacciones || []
-      ),
-    });
+    try {
+      setSaving(true);
 
-    alert("✅ Cambios guardados correctamente");
-  } catch (e) {
-    console.error(e);
-    alert("❌ Error al guardar cambios");
-  } finally {
-    setSaving(false);
+      await autosaveVoucherDraft(Number(voucher.id), {
+        totalVisa: Number(voucher.total_visa) || undefined,
+        totalMastercard: Number(voucher.total_mastercard) || undefined,
+        totalGlobal: Number(voucher.total_global) || undefined,
+        transacciones: mapTransaccionesForDraft(
+          voucher.voucher_transacciones || []
+        ),
+      });
+
+      alert("✅ Cambios guardados correctamente");
+    } catch (e) {
+      console.error(e);
+      alert("❌ Error al guardar cambios");
+    } finally {
+      setSaving(false);
+    }
   }
-}
-
 
   /* =======================
      CALCULATIONS
@@ -167,247 +170,264 @@ async function handleSave() {
   );
 
   return (
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-100px)]">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-100px)]">
 
-    {/* IZQUIERDA – INFO */}
-    <div className="lg:col-span-2 space-y-6 overflow-y-auto pr-2">
+      {/* IZQUIERDA – INFO */}
+      <div className="lg:col-span-2 space-y-6 overflow-y-auto pr-2">
 
-      {/* HEADER */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-semibold">Voucher #{voucher.id}</h1>
-          <p className="text-white/60 text-sm">
-            {voucher.sucursales?.nombre}
-          </p>
-
-          {!isLocked && (
-  <div className="mt-3 flex gap-3">
-    <button
-      onClick={handleSave}
-      disabled={saving}
-      className="px-4 py-2 rounded-xl bg-sky-500 text-black font-semibold"
-    >
-      {saving ? "Guardando..." : "Guardar cambios"}
-    </button>
-
-    <button
-      onClick={handleConfirm}
-      disabled={confirming}
-      className="px-4 py-2 rounded-xl bg-emerald-500 text-black font-semibold"
-    >
-      {confirming ? "Confirmando..." : "Confirmar voucher"}
-    </button>
-  </div>
-)}
-
-
-
-          {saving && (
-            <p className="text-xs text-white/40 mt-1">
-              Guardando cambios…
+        {/* HEADER */}
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-semibold">Voucher #{voucher.id}</h1>
+            <p className="text-white/60 text-sm">
+              {voucher.sucursales?.nombre}
             </p>
-          )}
+
+            {!isLocked && (
+              <div className="mt-3 flex gap-3">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="px-4 py-2 rounded-xl bg-sky-500 text-black font-semibold disabled:opacity-60"
+                >
+                  {saving ? "Guardando..." : "Guardar cambios"}
+                </button>
+
+                <button
+                  onClick={handleConfirm}
+                  disabled={confirming}
+                  className="px-4 py-2 rounded-xl bg-emerald-500 text-black font-semibold disabled:opacity-60"
+                >
+                  {confirming ? "Confirmando..." : "Confirmar voucher"}
+                </button>
+
+                {/* 🔥 NUEVO BOTÓN PARA SUBIR IMÁGENES */}
+                <button
+                  onClick={() => setShowUploadModal(true)}
+                  className="px-4 py-2 rounded-xl bg-white text-black font-semibold"
+                >
+                  📤 Subir imágenes
+                </button>
+              </div>
+            )}
+
+            {saving && (
+              <p className="text-xs text-white/40 mt-1">
+                Guardando cambios…
+              </p>
+            )}
+          </div>
+
+          <span
+            className={`px-3 py-1 rounded-full border text-xs ${badgeClass(
+              voucher.estado
+            )}`}
+          >
+            {voucher.estado}
+          </span>
         </div>
 
-        <span
-          className={`px-3 py-1 rounded-full border text-xs ${badgeClass(
-            voucher.estado
-          )}`}
-        >
-          {voucher.estado}
-        </span>
-      </div>
-
-      {/* TOTALES */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card label="Fecha" value={voucher.fecha_operacion} />
-        <EditableCard
-          label="Total Visa"
-          value={voucher.total_visa}
-          disabled={isLocked}
-          onChange={(v) =>
-            setVoucher({ ...voucher, total_visa: v })
-          }
-        />
-        <EditableCard
-          label="Total Mastercard"
-          value={voucher.total_mastercard}
-          disabled={isLocked}
-          onChange={(v) =>
-            setVoucher({ ...voucher, total_mastercard: v })
-          }
-        />
-        <EditableCard
-          label="Gran total"
-          value={voucher.total_global}
-          disabled={isLocked}
-          onChange={(v) =>
-            setVoucher({ ...voucher, total_global: v })
-          }
-        />
-      </div>
-
-      {Number(voucher.total_global) !== calculatedTotal && (
-        <p className="text-red-400 text-sm">
-          ⚠️ Descuadre: transacciones ${formatCOP(calculatedTotal)}
-        </p>
-      )}
-
-      {/* TRANSACCIONES */}
-      <section className="bg-white/5 border border-white/10 rounded-xl p-4">
-        <h2 className="font-semibold mb-3">Transacciones</h2>
-{!isLocked && (
-  <button
-    className="mb-3 px-3 py-1 rounded bg-white/10 hover:bg-white/15 text-sm"
-    onClick={() => {
-      setVoucher({
-        ...voucher,
-        voucher_transacciones: [
-          ...voucher.voucher_transacciones,
-          {
-            id: crypto.randomUUID(), // temporal (backend lo reemplaza)
-            franquicia: "VISA",
-            ultimos_digitos: "",
-            numero_recibo: "",
-            monto: "",
-          },
-        ],
-      });
-    }}
-  >
-    ➕ Agregar transacción
-  </button>
-)}
-
-        <table className="w-full text-sm">
-  <thead className="text-white/60">
-    <tr>
-      <th className="text-left">Franquicia</th>
-      <th className="text-left">Recibo</th>
-      <th className="text-left">Últ. dígitos</th>
-      <th className="text-left">Monto</th>
-      {!isLocked && <th></th>}
-    </tr>
-  </thead>
-
-  <tbody>
-    {voucher.voucher_transacciones.map((t) => (
-      <tr key={t.id} className="border-t border-white/5">
-        {/* FRANQUICIA */}
-        <td className="py-2">
-          <select
+        {/* TOTALES */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card label="Fecha" value={voucher.fecha_operacion} />
+          <EditableCard
+            label="Total Visa"
+            value={voucher.total_visa}
             disabled={isLocked}
-            value={t.franquicia}
-            className="bg-transparent border border-white/10 rounded px-2 py-1"
-            onChange={(e) => {
-              const value = e.target.value as "VISA" | "MASTERCARD";
-              setVoucher({
-                ...voucher,
-                voucher_transacciones: voucher.voucher_transacciones.map((tx) =>
-                  tx.id === t.id ? { ...tx, franquicia: value } : tx
-                ),
-              });
-            }}
-          >
-            <option value="VISA">VISA</option>
-            <option value="MASTERCARD">MASTERCARD</option>
-          </select>
-        </td>
-
-        {/* RECIBO */}
-        <td>
-          <input
-            disabled={isLocked}
-            value={t.numero_recibo ?? ""}
-            className="bg-transparent border border-white/10 rounded px-2 py-1 w-28"
-            onChange={(e) => {
-              const value = e.target.value;
-              setVoucher({
-                ...voucher,
-                voucher_transacciones: voucher.voucher_transacciones.map((tx) =>
-                  tx.id === t.id ? { ...tx, numero_recibo: value } : tx
-                ),
-              });
-            }}
+            onChange={(v) =>
+              setVoucher({ ...voucher, total_visa: v })
+            }
           />
-        </td>
-
-        {/* ÚLTIMOS DÍGITOS */}
-        <td>
-          <input
+          <EditableCard
+            label="Total Mastercard"
+            value={voucher.total_mastercard}
             disabled={isLocked}
-            maxLength={4}
-            placeholder="1234"
-            value={t.ultimos_digitos ?? ""}
-            className="bg-transparent border border-white/10 rounded px-2 py-1 w-20"
-            onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, "");
-              setVoucher({
-                ...voucher,
-                voucher_transacciones: voucher.voucher_transacciones.map((tx) =>
-                  tx.id === t.id ? { ...tx, ultimos_digitos: value } : tx
-                ),
-              });
-            }}
+            onChange={(v) =>
+              setVoucher({ ...voucher, total_mastercard: v })
+            }
           />
-        </td>
-
-        {/* MONTO */}
-        <td>
-          <input
+          <EditableCard
+            label="Gran total"
+            value={voucher.total_global}
             disabled={isLocked}
-            value={t.monto}
-            className="bg-transparent border border-white/10 rounded px-2 py-1 w-28"
-            onChange={(e) => {
-              const value = e.target.value;
-              setVoucher({
-                ...voucher,
-                voucher_transacciones: voucher.voucher_transacciones.map((tx) =>
-                  tx.id === t.id ? { ...tx, monto: value } : tx
-                ),
-              });
-            }}
+            onChange={(v) =>
+              setVoucher({ ...voucher, total_global: v })
+            }
           />
-        </td>
+        </div>
 
-        {/* DELETE */}
-        {!isLocked && (
-          <td>
+        {Number(voucher.total_global) !== calculatedTotal && (
+          <p className="text-red-400 text-sm">
+            ⚠️ Descuadre: transacciones ${formatCOP(calculatedTotal)}
+          </p>
+        )}
+
+        {/* TRANSACCIONES */}
+        <section className="bg-white/5 border border-white/10 rounded-xl p-4">
+          <h2 className="font-semibold mb-3">Transacciones</h2>
+          {!isLocked && (
             <button
-              className="text-red-400 hover:text-red-300"
+              className="mb-3 px-3 py-1 rounded bg-white/10 hover:bg-white/15 text-sm"
               onClick={() => {
-                if (!confirm("¿Eliminar esta transacción?")) return;
                 setVoucher({
                   ...voucher,
-                  voucher_transacciones: voucher.voucher_transacciones.filter(
-                    (tx) => tx.id !== t.id
-                  ),
+                  voucher_transacciones: [
+                    ...voucher.voucher_transacciones,
+                    {
+                      id: crypto.randomUUID(), // temporal (backend lo reemplaza)
+                      franquicia: "VISA",
+                      ultimos_digitos: "",
+                      numero_recibo: "",
+                      monto: "",
+                    },
+                  ],
                 });
               }}
             >
-              ✕
+              ➕ Agregar transacción
             </button>
-          </td>
-        )}
-      </tr>
-    ))}
-  </tbody>
-</table>
+          )}
 
-      </section>
-    </div>
+          <table className="w-full text-sm">
+            <thead className="text-white/60">
+              <tr>
+                <th className="text-left">Franquicia</th>
+                <th className="text-left">Recibo</th>
+                <th className="text-left">Últ. dígitos</th>
+                <th className="text-left">Monto</th>
+                {!isLocked && <th></th>}
+              </tr>
+            </thead>
 
-    {/* DERECHA – IMAGEN FIJA */}
-    <div className="lg:col-span-1 sticky top-6 h-[calc(100vh-120px)] overflow-y-auto">
-      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-        <h2 className="font-semibold mb-3">Voucher</h2>
+            <tbody>
+              {voucher.voucher_transacciones.map((t) => (
+                <tr key={t.id} className="border-t border-white/5">
+                  {/* FRANQUICIA */}
+                  <td className="py-2">
+                    <select
+                      disabled={isLocked}
+                      value={t.franquicia}
+                      className="bg-transparent border border-white/10 rounded px-2 py-1"
+                      onChange={(e) => {
+                        const value = e.target.value as "VISA" | "MASTERCARD";
+                        setVoucher({
+                          ...voucher,
+                          voucher_transacciones: voucher.voucher_transacciones.map((tx) =>
+                            tx.id === t.id ? { ...tx, franquicia: value } : tx
+                          ),
+                        });
+                      }}
+                    >
+                      <option value="VISA">VISA</option>
+                      <option value="MASTERCARD">MASTERCARD</option>
+                    </select>
+                  </td>
 
-        <VoucherImageViewer images={voucher.voucher_imagenes} />
+                  {/* RECIBO */}
+                  <td>
+                    <input
+                      disabled={isLocked}
+                      value={t.numero_recibo ?? ""}
+                      className="bg-transparent border border-white/10 rounded px-2 py-1 w-28"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setVoucher({
+                          ...voucher,
+                          voucher_transacciones: voucher.voucher_transacciones.map((tx) =>
+                            tx.id === t.id ? { ...tx, numero_recibo: value } : tx
+                          ),
+                        });
+                      }}
+                    />
+                  </td>
+
+                  {/* ÚLTIMOS DÍGITOS */}
+                  <td>
+                    <input
+                      disabled={isLocked}
+                      maxLength={4}
+                      placeholder="1234"
+                      value={t.ultimos_digitos ?? ""}
+                      className="bg-transparent border border-white/10 rounded px-2 py-1 w-20"
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "");
+                        setVoucher({
+                          ...voucher,
+                          voucher_transacciones: voucher.voucher_transacciones.map((tx) =>
+                            tx.id === t.id ? { ...tx, ultimos_digitos: value } : tx
+                          ),
+                        });
+                      }}
+                    />
+                  </td>
+
+                  {/* MONTO */}
+                  <td>
+                    <input
+                      disabled={isLocked}
+                      value={t.monto}
+                      className="bg-transparent border border-white/10 rounded px-2 py-1 w-28"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setVoucher({
+                          ...voucher,
+                          voucher_transacciones: voucher.voucher_transacciones.map((tx) =>
+                            tx.id === t.id ? { ...tx, monto: value } : tx
+                          ),
+                        });
+                      }}
+                    />
+                  </td>
+
+                  {/* DELETE */}
+                  {!isLocked && (
+                    <td>
+                      <button
+                        className="text-red-400 hover:text-red-300"
+                        onClick={() => {
+                          if (!confirm("¿Eliminar esta transacción?")) return;
+                          setVoucher({
+                            ...voucher,
+                            voucher_transacciones: voucher.voucher_transacciones.filter(
+                              (tx) => tx.id !== t.id
+                            ),
+                          });
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+        </section>
       </div>
-    </div>
 
-  </div>
-);
+      {/* DERECHA – IMAGEN FIJA */}
+      <div className="lg:col-span-1 sticky top-6 h-[calc(100vh-120px)] overflow-y-auto">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+          <h2 className="font-semibold mb-3">Voucher</h2>
+
+          <VoucherImageViewer images={voucher.voucher_imagenes} />
+        </div>
+      </div>
+
+      {/* 🔥 MODAL DE SUBIDA DE IMÁGENES */}
+      <UploadImagesModal
+        open={showUploadModal}
+        voucherId={Number(voucher.id)}
+        onClose={() => setShowUploadModal(false)}
+        onUploaded={() => {
+          loadVoucher(); // Recargar para mostrar las nuevas imágenes
+          setShowUploadModal(false);
+        }}
+      />
+
+    </div>
+  );
 }
 
 /* =======================
