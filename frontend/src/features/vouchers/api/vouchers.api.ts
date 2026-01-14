@@ -1,6 +1,26 @@
 import { api } from "../../../lib/api";
 import type { VoucherDetail, VoucherListItem } from "../types";
 
+// Tipo para sucursales
+export interface Sucursal {
+  id: number;
+  nombre: string;
+  // Agrega otros campos si tu API los devuelve
+}
+
+// =======================
+// SUCURSALES
+// =======================
+
+export async function fetchSucursales() {
+  const res = await api.get<Sucursal[]>("/sucursales");
+  return res.data;
+}
+
+// =======================
+// VOUCHERS
+// =======================
+
 export async function fetchVouchers(params?: {
   estado?: string;
   sucursalId?: number;
@@ -46,6 +66,7 @@ export async function createVoucherDraft(input: {
   const res = await api.post("/vouchers/draft", input);
   return res.data;
 }
+
 export async function confirmVoucher(
   id: number,
   body: { totalVisa?: number; totalMastercard?: number; totalGlobal?: number; observacion?: string },
@@ -53,6 +74,7 @@ export async function confirmVoucher(
   const res = await api.post(`/vouchers/${id}/confirm`, body);
   return res.data;
 }
+
 // =======================
 // IMÁGENES
 // =======================
