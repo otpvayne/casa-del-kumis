@@ -2,26 +2,41 @@ import { api } from "../../../lib/api";
 import type { User } from "../types";
 
 export async function fetchUsers() {
-  const { data } = await api.get<User[]>("/users");
-  return data;
+  const res = await api.get<User[]>("/users");
+  return res.data;
 }
 
-export async function createUser(payload: {
+export async function createUser(input: {
   nombre: string;
   email: string;
   password: string;
   rol: string;
 }) {
-  return api.post("/users", payload);
+  const res = await api.post("/users", input);
+  return res.data;
 }
 
 export async function updateUser(
   id: number,
-  payload: Partial<Pick<User, "nombre" | "email" | "rol">>
+  input: { nombre: string; email: string; rol: string }
 ) {
-  return api.patch(`/users/${id}`, payload);
+  const res = await api.patch(`/users/${id}`, input);
+  return res.data;
 }
 
 export async function deactivateUser(id: number) {
-  return api.patch(`/users/${id}/deactivate`);
+  const res = await api.patch(`/users/${id}/deactivate`);
+  return res.data;
+}
+
+// ✅ ACTIVAR
+export async function activateUser(id: number) {
+  const res = await api.patch(`/users/${id}/activate`);
+  return res.data;
+}
+
+// 🗑 ELIMINAR
+export async function deleteUser(id: number) {
+  const res = await api.delete(`/users/${id}`);
+  return res.data;
 }
