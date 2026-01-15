@@ -12,7 +12,7 @@ import ConciliacionesPage from "../pages/conciliaciones/ConciliacionesPage";
 import ParametrosSistemaPage from "../pages/parametros/ParametrosPage";
 import RedeBanPage from "../pages/redeban/RedeBanPage";
 import SucursalesPage from "../pages/sucursales/SucursalesPage";
-import UsersPage from "../pages/users/UsersPage";
+import UsersPage from "../features/users/pages/UsersPage";
 import VouchersListPage from "../features/vouchers/pages/VouchersListPage";
 import VoucherDetailPage from "../features/vouchers/pages/VoucherDetailPage";
 import CreateVoucherDraftPage from "../features/vouchers/pages/CreateVoucherDraftPage";

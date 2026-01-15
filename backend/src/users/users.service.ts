@@ -128,4 +128,36 @@ export class UsersService {
 
     return this.toSafeUser(updated);
   }
+  // ✅ Activar usuario
+async activate(id: number) {
+  const user = await this.prisma.usuarios.findUnique({
+    where: { id },
+  });
+
+  if (!user) {
+    throw new NotFoundException('Usuario no encontrado');
+  }
+
+  return this.prisma.usuarios.update({
+    where: { id },
+    data: {
+      estado: 'ACTIVO',
+    },
+  });
+}
+// 🗑 Eliminar usuario
+async remove(id: number) {
+  const user = await this.prisma.usuarios.findUnique({
+    where: { id },
+  });
+
+  if (!user) {
+    throw new NotFoundException('Usuario no encontrado');
+  }
+
+  return this.prisma.usuarios.delete({
+    where: { id },
+  });
+}
+
 }

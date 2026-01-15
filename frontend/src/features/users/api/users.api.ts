@@ -1,5 +1,5 @@
-import { api } from "@/lib/api";
-import { User } from "../types";
+import { api } from "../../../lib/api";
+import type { User } from "../types";
 
 export async function fetchUsers() {
   const { data } = await api.get<User[]>("/users");

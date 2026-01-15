@@ -16,6 +16,9 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Rol } from '@prisma/client';
+import { Delete } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
+
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -60,4 +63,17 @@ export class UsersController {
   deactivate(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.deactivate(id);
   }
+  // ✅ Activar usuario
+@Patch(':id/activate')
+@Roles(Rol.PROPIETARIO, Rol.ADMIN)
+activate(@Param('id', ParseIntPipe) id: number) {
+  return this.usersService.activate(id);
+}
+// 🗑 Eliminar usuario definitivamente
+@Delete(':id')
+@Roles(Rol.PROPIETARIO, Rol.ADMIN)
+remove(@Param('id', ParseIntPipe) id: number) {
+  return this.usersService.remove(id);
+}
+
 }
