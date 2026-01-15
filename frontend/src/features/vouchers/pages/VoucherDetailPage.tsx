@@ -34,7 +34,7 @@ type Voucher = {
   id: string;
   sucursal_id: string;
   fecha_operacion: string;
-  estado: "DRAFT" | "CONFIRMADO";
+  estado: "DRAFT" | "CONFIRMADO" | "PENDIENTE_CONFIRMACION";
   total_visa: string | null;
   total_mastercard: string | null;
   total_global: string | null;
@@ -44,15 +44,34 @@ type Voucher = {
     nombre: string;
     direccion: string;
   };
+  // Campos de auditoría
+  created_at?: string;
+  creado_por_id?: string;
+  confirmado_por_id?: string | null;
+  confirmado_en?: string | null;
+  precision_ocr?: string;
+  usuarios_creador?: {
+    id: number;
+    nombre: string;
+    email: string;
+  };
+  usuarios_confirmador?: {
+    id: number;
+    nombre: string;
+    email: string;
+  };
 };
 
 /* =======================
    HELPERS
 ======================= */
 function badgeClass(estado: string) {
-  return estado === "CONFIRMADO"
-    ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
-    : "bg-sky-500/15 text-sky-300 border-sky-500/30";
+  if (estado === "CONFIRMADO") {
+    return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
+  } else if (estado === "PENDIENTE_CONFIRMACION") {
+    return "bg-amber-500/15 text-amber-300 border-amber-500/30";
+  }
+  return "bg-sky-500/15 text-sky-300 border-sky-500/30";
 }
 
 function toPublicUploadUrl(ruta: string) {
@@ -65,6 +84,18 @@ function toPublicUploadUrl(ruta: string) {
 function formatCOP(v: string | number | null) {
   if (!v) return "—";
   return Number(v).toLocaleString("es-CO");
+}
+
+function formatDateTime(dateStr: string | null | undefined) {
+  if (!dateStr) return "—";
+  const date = new Date(dateStr);
+  return date.toLocaleString("es-CO", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function mapTransaccionesForDraft(
@@ -89,6 +120,7 @@ export default function VoucherDetailPage() {
   const [confirming, setConfirming] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showAuditHistory, setShowAuditHistory] = useState(false);
 
   const isLocked = voucher?.estado === "CONFIRMADO";
   const fileInputId = "voucher-upload-input";
@@ -201,12 +233,11 @@ export default function VoucherDetailPage() {
                   {confirming ? "Confirmando..." : "Confirmar voucher"}
                 </button>
 
-                {/* 🔥 NUEVO BOTÓN PARA SUBIR IMÁGENES */}
                 <button
                   onClick={() => setShowUploadModal(true)}
                   className="px-4 py-2 rounded-xl bg-white text-black font-semibold"
                 >
-                   Subir imágenes
+                  📤 Subir imágenes
                 </button>
               </div>
             )}
@@ -223,7 +254,7 @@ export default function VoucherDetailPage() {
               voucher.estado
             )}`}
           >
-            {voucher.estado}
+            {voucher.estado.replace(/_/g, ' ')}
           </span>
         </div>
 
@@ -274,7 +305,7 @@ export default function VoucherDetailPage() {
                   voucher_transacciones: [
                     ...voucher.voucher_transacciones,
                     {
-                      id: crypto.randomUUID(), // temporal (backend lo reemplaza)
+                      id: crypto.randomUUID(),
                       franquicia: "VISA",
                       ultimos_digitos: "",
                       numero_recibo: "",
@@ -284,7 +315,7 @@ export default function VoucherDetailPage() {
                 });
               }}
             >
-               Agregar transacción
+              ➕ Agregar transacción
             </button>
           )}
 
@@ -302,7 +333,6 @@ export default function VoucherDetailPage() {
             <tbody>
               {voucher.voucher_transacciones.map((t) => (
                 <tr key={t.id} className="border-t border-white/5">
-                  {/* FRANQUICIA */}
                   <td className="py-2">
                     <select
                       disabled={isLocked}
@@ -323,7 +353,6 @@ export default function VoucherDetailPage() {
                     </select>
                   </td>
 
-                  {/* RECIBO */}
                   <td>
                     <input
                       disabled={isLocked}
@@ -341,7 +370,6 @@ export default function VoucherDetailPage() {
                     />
                   </td>
 
-                  {/* ÚLTIMOS DÍGITOS */}
                   <td>
                     <input
                       disabled={isLocked}
@@ -361,7 +389,6 @@ export default function VoucherDetailPage() {
                     />
                   </td>
 
-                  {/* MONTO */}
                   <td>
                     <input
                       disabled={isLocked}
@@ -379,7 +406,6 @@ export default function VoucherDetailPage() {
                     />
                   </td>
 
-                  {/* DELETE */}
                   {!isLocked && (
                     <td>
                       <button
@@ -406,22 +432,143 @@ export default function VoucherDetailPage() {
         </section>
       </div>
 
-      {/* DERECHA – IMAGEN FIJA */}
-      <div className="lg:col-span-1 sticky top-6 h-[calc(100vh-120px)] overflow-y-auto">
+      {/* DERECHA – VISOR E HISTORIAL */}
+      <div className="lg:col-span-1 space-y-4 sticky top-6 h-[calc(100vh-120px)] overflow-y-auto">
+        
+        {/* VISOR DE IMÁGENES */}
         <div className="bg-white/5 border border-white/10 rounded-xl p-4">
           <h2 className="font-semibold mb-3">Voucher</h2>
-
           <VoucherImageViewer images={voucher.voucher_imagenes} />
+        </div>
+
+        {/* AUDITORÍA / HISTORIAL */}
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold">Auditoría</h2>
+            <button
+              onClick={() => setShowAuditHistory(!showAuditHistory)}
+              className="text-xs text-white/60 hover:text-white/90"
+            >
+              {showAuditHistory ? "Ocultar" : "Ver más"}
+            </button>
+          </div>
+
+          <div className="space-y-3 text-sm">
+            {/* Creado */}
+            {voucher.created_at && (
+              <div>
+                <p className="text-white/60 text-xs mb-1">Creado</p>
+                <p className="text-white/90">
+                  {formatDateTime(voucher.created_at)}
+                </p>
+                {voucher.usuarios_creador ? (
+                  <p className="text-white/60 text-xs mt-1">
+                    por {voucher.usuarios_creador.nombre}
+                  </p>
+                ) : voucher.creado_por_id ? (
+                  <p className="text-white/60 text-xs mt-1">
+                    por Usuario #{voucher.creado_por_id}
+                  </p>
+                ) : null}
+              </div>
+            )}
+
+            {/* Confirmado */}
+            {voucher.confirmado_en && (
+              <div className="border-t border-white/5 pt-3">
+                <p className="text-white/60 text-xs mb-1">Confirmado</p>
+                <p className="text-white/90">
+                  {formatDateTime(voucher.confirmado_en)}
+                </p>
+                {voucher.usuarios_confirmador ? (
+                  <p className="text-white/60 text-xs mt-1">
+                    por {voucher.usuarios_confirmador.nombre}
+                  </p>
+                ) : voucher.confirmado_por_id ? (
+                  <p className="text-white/60 text-xs mt-1">
+                    por Usuario #{voucher.confirmado_por_id}
+                  </p>
+                ) : null}
+              </div>
+            )}
+
+            {/* Precisión OCR */}
+            {voucher.precision_ocr && (
+              <div className="border-t border-white/5 pt-3">
+                <p className="text-white/60 text-xs mb-1">Precisión OCR</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-white/10 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-emerald-500 h-full transition-all"
+                      style={{ width: `${voucher.precision_ocr}%` }}
+                    />
+                  </div>
+                  <span className="text-white/90 font-semibold text-xs">
+                    {voucher.precision_ocr}%
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Historial expandido */}
+            {showAuditHistory && (
+              <div className="border-t border-white/5 pt-3 space-y-2">
+                <p className="text-white/60 text-xs font-semibold">Detalles completos</p>
+                
+                <div className="bg-white/5 rounded-lg p-2 text-xs space-y-1">
+                  {voucher.created_at && (
+                    <div className="flex justify-between">
+                      <span className="text-white/60">Creación:</span>
+                      <span>{formatDateTime(voucher.created_at)}</span>
+                    </div>
+                  )}
+                  
+                  {voucher.confirmado_en && (
+                    <div className="flex justify-between">
+                      <span className="text-white/60">Confirmación:</span>
+                      <span>{formatDateTime(voucher.confirmado_en)}</span>
+                    </div>
+                  )}
+
+                  {voucher.estado && (
+                    <div className="flex justify-between">
+                      <span className="text-white/60">Estado:</span>
+                      <span className="capitalize">
+                        {voucher.estado.replace(/_/g, ' ').toLowerCase()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* IDs */}
+                <div className="bg-white/5 rounded-lg p-2 text-xs space-y-1">
+                  <p className="text-white/50 text-xs mb-1">IDs de usuarios</p>
+                  {voucher.creado_por_id && (
+                    <div className="flex justify-between text-white/50">
+                      <span>Creador:</span>
+                      <span>#{voucher.creado_por_id}</span>
+                    </div>
+                  )}
+                  {voucher.confirmado_por_id && (
+                    <div className="flex justify-between text-white/50">
+                      <span>Confirmador:</span>
+                      <span>#{voucher.confirmado_por_id}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* 🔥 MODAL DE SUBIDA DE IMÁGENES */}
+      {/* MODAL DE SUBIDA */}
       <UploadImagesModal
         open={showUploadModal}
         voucherId={Number(voucher.id)}
         onClose={() => setShowUploadModal(false)}
         onUploaded={() => {
-          loadVoucher(); // Recargar para mostrar las nuevas imágenes
+          loadVoucher();
           setShowUploadModal(false);
         }}
       />
