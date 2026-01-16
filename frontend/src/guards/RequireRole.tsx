@@ -7,12 +7,24 @@ type Props = {
 
 export function RequireRole({ allowed }: Props) {
   const user = getUserFromToken();
-
-  // Si no hay user o no hay rol, lo sacamos
   const rol = user?.rol;
-  if (!rol) return <Navigate to="/login" replace />;
 
-  if (!allowed.includes(rol)) return <Navigate to="/unauthorized" replace />;
+  if (!rol) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!allowed.includes(rol)) {
+    return (
+      <Navigate
+        to="/unauthorized"
+        replace
+        state={{
+          rol,
+          allowed,
+        }}
+      />
+    );
+  }
 
   return <Outlet />;
 }
