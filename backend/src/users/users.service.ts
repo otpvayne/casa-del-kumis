@@ -128,36 +128,45 @@ export class UsersService {
 
     return this.toSafeUser(updated);
   }
+
   // ✅ Activar usuario
-async activate(id: number) {
-  const user = await this.prisma.usuarios.findUnique({
-    where: { id },
-  });
+  async activate(id: number): Promise<SafeUser> { // ← Agregar tipo de retorno
+    const user = await this.prisma.usuarios.findUnique({
+      where: { id },
+    });
 
-  if (!user) {
-    throw new NotFoundException('Usuario no encontrado');
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    const updated = await this.prisma.usuarios.update({ // ← Guardar el resultado
+      where: { id },
+      data: {
+        estado: 'ACTIVO',
+      },
+    });
+
+    return this.toSafeUser(updated); // ✅ Convertir BigInt a number
   }
 
-  return this.prisma.usuarios.update({
-    where: { id },
-    data: {
-      estado: 'ACTIVO',
-    },
-  });
-}
-// 🗑 Eliminar usuario
-async remove(id: number) {
-  const user = await this.prisma.usuarios.findUnique({
-    where: { id },
-  });
+  // 🗑 Eliminar usuario
+  async remove(id: number): Promise<{ message: string; id: number }> { // ← Mejor tipo de retorno
+    const user = await this.prisma.usuarios.findUnique({
+      where: { id },
+    });
 
-  if (!user) {
-    throw new NotFoundException('Usuario no encontrado');
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    await this.prisma.usuarios.delete({ // ← No necesitas retornar el usuario eliminado
+      where: { id },
+    });
+
+    // ✅ Retornar un objeto simple sin BigInt
+    return {
+      message: 'Usuario eliminado correctamente',
+      id: Number(id),
+    };
   }
-
-  return this.prisma.usuarios.delete({
-    where: { id },
-  });
-}
-
 }
