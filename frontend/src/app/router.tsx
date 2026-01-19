@@ -10,7 +10,7 @@ import BancoPage from "../pages/banco/BancoPage";
 import ConciliacionesPage from "../pages/conciliaciones/ConciliacionesPage";
 import ParametrosSistemaPage from "../pages/parametros/ParametrosPage";
 import RedeBanPage from "../pages/redeban/RedeBanPage";
-import SucursalesPage from "../pages/sucursales/SucursalesPage";
+import SucursalesPage from "../features/sucursales/pages/SucursalesPage";
 import UsersPage from "../features/users/pages/UsersPage";
 import VouchersListPage from "../features/vouchers/pages/VouchersListPage";
 import VoucherDetailPage from "../features/vouchers/pages/VoucherDetailPage";

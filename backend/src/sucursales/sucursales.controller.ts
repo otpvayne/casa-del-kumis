@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -38,11 +39,11 @@ export class SucursalesController {
   // GET /sucursales
   // ===========================
   @Get()
-  @Roles(Rol.PROPIETARIO, Rol.ADMIN, Rol.DESARROLLADOR, Rol.SOPORTE)
+  @Roles(Rol.PROPIETARIO, Rol.ADMIN, Rol.DESARROLLADOR, Rol.SOPORTE, Rol.OPERATIVO)
   @ApiOperation({
     summary: 'Listar sucursales',
     description:
-      'Devuelve todas las sucursales registradas. No incluye OPERATIVO.',
+      'Devuelve todas las sucursales registradas.',
   })
   @ApiResponse({
     status: 200,
@@ -70,7 +71,7 @@ export class SucursalesController {
   // GET /sucursales/:id
   // ===========================
   @Get(':id')
-  @Roles(Rol.PROPIETARIO, Rol.ADMIN, Rol.DESARROLLADOR, Rol.SOPORTE)
+  @Roles(Rol.PROPIETARIO, Rol.ADMIN, Rol.DESARROLLADOR, Rol.SOPORTE, Rol.OPERATIVO)
   @ApiOperation({
     summary: 'Obtener sucursal por ID',
   })
@@ -104,11 +105,11 @@ export class SucursalesController {
   // POST /sucursales
   // ===========================
   @Post()
-  @Roles(Rol.PROPIETARIO, Rol.ADMIN)
+  @Roles(Rol.PROPIETARIO, Rol.ADMIN, Rol.DESARROLLADOR, Rol.SOPORTE)
   @ApiOperation({
     summary: 'Crear sucursal',
     description:
-      'Crea una nueva sucursal. Solo PROPIETARIO y ADMIN pueden hacerlo.',
+      'Crea una nueva sucursal.',
   })
   @ApiBody({
     schema: {
@@ -136,7 +137,7 @@ export class SucursalesController {
   // PATCH /sucursales/:id
   // ===========================
   @Patch(':id')
-  @Roles(Rol.PROPIETARIO, Rol.ADMIN)
+  @Roles(Rol.PROPIETARIO, Rol.ADMIN, Rol.DESARROLLADOR, Rol.SOPORTE)
   @ApiOperation({
     summary: 'Actualizar sucursal',
     description:
@@ -171,7 +172,7 @@ export class SucursalesController {
   // PATCH /sucursales/:id/deactivate
   // ===========================
   @Patch(':id/deactivate')
-  @Roles(Rol.PROPIETARIO, Rol.ADMIN)
+  @Roles(Rol.PROPIETARIO, Rol.ADMIN, Rol.DESARROLLADOR, Rol.SOPORTE)
   @ApiOperation({
     summary: 'Desactivar sucursal',
     description:
@@ -190,5 +191,31 @@ export class SucursalesController {
   @ApiForbiddenResponse({ description: 'Rol no autorizado' })
   deactivate(@Param('id') id: string) {
     return this.service.deactivate(id);
+  }
+
+  // ===========================
+  // DELETE /sucursales/:id
+  // ===========================
+  @Delete(':id')
+  @Roles(Rol.PROPIETARIO, Rol.ADMIN)
+  @ApiOperation({
+    summary: 'Eliminar sucursal',
+    description:
+      'Elimina permanentemente una sucursal. Solo PROPIETARIO y ADMIN.',
+  })
+  @ApiParam({
+    name: 'id',
+    example: 8,
+    description: 'ID de la sucursal',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sucursal eliminada',
+  })
+  @ApiResponse({ status: 404, description: 'Sucursal no encontrada' })
+  @ApiUnauthorizedResponse({ description: 'Token faltante o inválido' })
+  @ApiForbiddenResponse({ description: 'Rol no autorizado' })
+  remove(@Param('id') id: string) {
+    return this.service.remove(id);
   }
 }

@@ -112,4 +112,33 @@ export class SucursalesService {
 
     return this.toSafe(updated);
   }
+
+  async remove(id: string): Promise<{ message: string; id: string }> {
+    const existing = await this.prisma.sucursales.findUnique({
+      where: { id: BigInt(id) },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Sucursal con ID ${id} no encontrada`);
+    }
+
+    // ⚠️ OPCIONAL: Verificar si tiene relaciones antes de eliminar
+    // Por ejemplo, si tiene vouchers asociados, podrías lanzar un error:
+    // const hasVouchers = await this.prisma.vouchers.count({
+    //   where: { sucursal_id: BigInt(id) }
+    // });
+    // if (hasVouchers > 0) {
+    //   throw new ConflictException('No se puede eliminar: la sucursal tiene vouchers asociados');
+    // }
+
+    await this.prisma.sucursales.delete({
+      where: { id: BigInt(id) },
+    });
+
+    return {
+      message: 'Sucursal eliminada correctamente',
+      id: id,
+    };
+  }
+  
 }
