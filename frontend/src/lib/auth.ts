@@ -2,10 +2,12 @@ import { jwtDecode } from "jwt-decode";
 
 const TOKEN_KEY = "auth_token";
 
+// IMPORTANTE: Exportar el tipo para que pueda ser usado en otros archivos
 export type JwtPayload = {
-  sub: string | number;
-  email?: string;
-  rol?: string; // tu backend usa Rol enum, suele venir como string
+  sub: number; // ID del usuario
+  email: string;
+  rol: string; // Usamos string genérico para mayor flexibilidad
+  nombre?: string; // Agregamos nombre opcional
   iat?: number;
   exp?: number;
 };
@@ -20,6 +22,7 @@ export function getToken(): string | null {
 
 export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem("user"); // Limpiar también el user si existe
 }
 
 export function getUserFromToken(): JwtPayload | null {
@@ -35,7 +38,7 @@ export function getUserFromToken(): JwtPayload | null {
 
 export function isTokenExpired(): boolean {
   const payload = getUserFromToken();
-  if (!payload?.exp) return false; // si no hay exp, no bloqueamos
+  if (!payload?.exp) return false;
   const now = Math.floor(Date.now() / 1000);
   return payload.exp < now;
 }

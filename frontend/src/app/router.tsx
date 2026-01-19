@@ -1,7 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
-
 import NotFoundPage from "../pages/NotFoundPage";
 import UnauthorizedPage from "../pages/UnauthorizedPage";
 import AdminLayout from "../layouts/AdminLayout";
@@ -17,42 +16,64 @@ import VouchersListPage from "../features/vouchers/pages/VouchersListPage";
 import VoucherDetailPage from "../features/vouchers/pages/VoucherDetailPage";
 import CreateVoucherDraftPage from "../features/vouchers/pages/CreateVoucherDraftPage";
 
-
 export const router = createBrowserRouter([
+  // Páginas públicas
   { path: "/login", element: <LoginPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
 
+  // Rutas protegidas
   {
     element: <RequireAuth />,
     children: [
       {
         element: <AdminLayout />,
         children: [
-          // ✅ al entrar a "/" te manda al dashboard
+          // Redirect inicial
           { path: "/", element: <Navigate to="/dashboard" replace /> },
 
-          // ✅ rutas normales (cualquier usuario autenticado)
+          // ✅ Dashboard - TODOS los roles
           { path: "/dashboard", element: <DashboardPage /> },
 
-          // ✅ rutas protegidas por roles
+          // ✅ Vouchers - TODOS los roles
+          { 
+            path: "/vouchers", 
+            element: <VouchersListPage /> 
+          },
+          { 
+            path: "/vouchers/:id", 
+            element: <VoucherDetailPage /> 
+          },
+          { 
+            path: "/vouchers/new", 
+            element: <CreateVoucherDraftPage /> 
+          },
+
+          // ✅ Conciliaciones - TODOS los roles
+          { 
+            path: "/conciliaciones", 
+            element: <ConciliacionesPage /> 
+          },
+
+          // ✅ RedeBan - TODOS los roles (INCLUYE OPERATIVO)
+          { 
+            path: "/redeban", 
+            element: <RedeBanPage /> 
+          },
+
+          // ✅ Banco - TODOS los roles (INCLUYE OPERATIVO)
+          { 
+            path: "/banco", 
+            element: <BancoPage /> 
+          },
+
+          // ❌ Rutas RESTRINGIDAS - Solo ADMIN, PROPIETARIO, SOPORTE, DESARROLLADOR
+          // (SIN OPERATIVO)
           {
-            element: (
-              <RequireRole
-                allowed={["ADMIN", "PROPIETARIO", "SOPORTE", "DESARROLLADOR"]}
-              />
-            ),
+            element: <RequireRole allowed={["ADMIN", "PROPIETARIO", "SOPORTE", "DESARROLLADOR"]} />,
             children: [
               { path: "/sucursales", element: <SucursalesPage /> },
-{ path: "/users", element: <UsersPage /> },
-{ path: "/parametros", element: <ParametrosSistemaPage /> },
-{ path: "/redeban", element: <RedeBanPage /> },
-{ path: "/banco", element: <BancoPage /> },
-{ path: "/conciliaciones", element: <ConciliacionesPage /> },
-{ path: "/vouchers", element: <VouchersListPage /> },
-{ path: "/vouchers/:id", element: <VoucherDetailPage /> },
-{ path: "/vouchers/new", element: <CreateVoucherDraftPage /> },
-
-
+              { path: "/users", element: <UsersPage /> },
+              { path: "/parametros", element: <ParametrosSistemaPage /> },
             ],
           },
         ],
@@ -60,5 +81,6 @@ export const router = createBrowserRouter([
     ],
   },
 
+  // 404
   { path: "*", element: <NotFoundPage /> },
 ]);
