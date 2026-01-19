@@ -1,9 +1,15 @@
 import { api } from "../../../lib/api";
 import type { Sucursal } from "../types/sucursal.types";
 
-// GET /sucursales - Listar todas
+// GET /sucursales - Listar todas (activas e inactivas)
 export const getSucursales = async (): Promise<Sucursal[]> => {
   const { data } = await api.get("/sucursales");
+  return data;
+};
+
+// GET /sucursales/activas - Listar solo activas (para formularios)
+export const getSucursalesActivas = async (): Promise<Sucursal[]> => {
+  const { data } = await api.get("/sucursales/activas");
   return data;
 };
 
@@ -21,7 +27,7 @@ export const createSucursal = async (
   return data;
 };
 
-// PATCH /sucursales/:id - Actualizar (✅ Cambiado de PUT a PATCH)
+// PATCH /sucursales/:id - Actualizar
 export const updateSucursal = async (
   id: number,
   payload: Partial<Omit<Sucursal, "id" | "created_at" | "updated_at">>
@@ -30,13 +36,13 @@ export const updateSucursal = async (
   return data;
 };
 
-// PATCH /sucursales/:id/deactivate - Desactivar (✅ NUEVO)
+// PATCH /sucursales/:id/deactivate - Desactivar
 export const deactivateSucursal = async (id: number): Promise<Sucursal> => {
   const { data } = await api.patch(`/sucursales/${id}/deactivate`);
   return data;
 };
 
-// DELETE /sucursales/:id - Eliminar (si existe en tu backend)
+// DELETE /sucursales/:id - Eliminar
 export const deleteSucursal = async (id: number): Promise<void> => {
   await api.delete(`/sucursales/${id}`);
 };

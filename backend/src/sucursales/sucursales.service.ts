@@ -13,13 +13,22 @@ export class SucursalesService {
   private toSafe(s: sucursales): SucursalSafe {
     return {
       ...s,
-      id: s.id.toString(), // ✅ evita BigInt serialization en JSON
+      id: s.id.toString(),
     };
   }
 
   async findAll(): Promise<SucursalSafe[]> {
     const rows = await this.prisma.sucursales.findMany({
       orderBy: { created_at: 'desc' },
+    });
+    return rows.map((s) => this.toSafe(s));
+  }
+
+  // ✅ NUEVO: Solo sucursales activas para formularios
+  async findAllActive(): Promise<SucursalSafe[]> {
+    const rows = await this.prisma.sucursales.findMany({
+      where: { estado: 'ACTIVO' },
+      orderBy: { nombre: 'asc' }, // Ordenadas alfabéticamente
     });
     return rows.map((s) => this.toSafe(s));
   }
@@ -36,7 +45,6 @@ export class SucursalesService {
     const codigoComercio = dto.codigo_comercio_redeban.trim();
     const codigoBanco = dto.codigo_referencia_banco.trim();
 
-    // Validaciones de unicidad (para devolver error claro antes de que explote en DB)
     const existsComercio = await this.prisma.sucursales.findUnique({
       where: { codigo_comercio_redeban: codigoComercio },
     });
@@ -57,7 +65,7 @@ export class SucursalesService {
         codigo_comercio_redeban: codigoComercio,
         codigo_referencia_banco: codigoBanco,
         direccion: dto.direccion?.trim(),
-        estado: dto.estado ?? 'ACTIVO', // ✅ por defecto ACTIVO
+        estado: dto.estado ?? 'ACTIVO',
       },
     });
 
@@ -70,7 +78,6 @@ export class SucursalesService {
     });
     if (!current) throw new NotFoundException('Sucursal no encontrada');
 
-    // Si cambian códigos, verificar unicidad
     if (dto.codigo_comercio_redeban && dto.codigo_comercio_redeban !== current.codigo_comercio_redeban) {
       const exists = await this.prisma.sucursales.findUnique({
         where: { codigo_comercio_redeban: dto.codigo_comercio_redeban.trim() },
@@ -122,15 +129,6 @@ export class SucursalesService {
       throw new NotFoundException(`Sucursal con ID ${id} no encontrada`);
     }
 
-    // ⚠️ OPCIONAL: Verificar si tiene relaciones antes de eliminar
-    // Por ejemplo, si tiene vouchers asociados, podrías lanzar un error:
-    // const hasVouchers = await this.prisma.vouchers.count({
-    //   where: { sucursal_id: BigInt(id) }
-    // });
-    // if (hasVouchers > 0) {
-    //   throw new ConflictException('No se puede eliminar: la sucursal tiene vouchers asociados');
-    // }
-
     await this.prisma.sucursales.delete({
       where: { id: BigInt(id) },
     });
@@ -140,5 +138,4 @@ export class SucursalesService {
       id: id,
     };
   }
-  
 }

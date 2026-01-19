@@ -5,16 +5,16 @@ import type { VoucherDetail, VoucherListItem } from "../types";
 export interface Sucursal {
   id: number;
   nombre: string;
-  // Agrega otros campos si tu API los devuelve
+  codigo_comercio_redeban: string;
+  codigo_referencia_banco: string;
+  direccion: string;
+  estado: string;
 }
 
-// =======================
-// SUCURSALES
-// =======================
-
-export async function fetchSucursales() {
-  const res = await api.get<Sucursal[]>("/sucursales");
-  return res.data;
+// ✅ Usar el endpoint /activas en lugar de /sucursales
+export async function fetchSucursales(): Promise<Sucursal[]> {
+  const { data } = await api.get("/sucursales/activas");
+  return data;
 }
 
 // =======================

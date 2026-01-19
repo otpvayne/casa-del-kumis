@@ -36,6 +36,38 @@ export class SucursalesController {
   constructor(private readonly service: SucursalesService) {}
 
   // ===========================
+  // GET /sucursales/activas
+  // ⚠️ IMPORTANTE: Debe ir ANTES de /:id
+  // ===========================
+  @Get('activas')
+  @Roles(Rol.PROPIETARIO, Rol.ADMIN, Rol.DESARROLLADOR, Rol.SOPORTE, Rol.OPERATIVO)
+  @ApiOperation({
+    summary: 'Listar sucursales activas',
+    description: 'Devuelve solo las sucursales con estado ACTIVO para usar en formularios de vouchers.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Listado de sucursales activas',
+    schema: {
+      example: [
+        {
+          id: '8',
+          nombre: 'CASA DEL KUMIS CENTRO',
+          codigo_comercio_redeban: '0063286892',
+          codigo_referencia_banco: '0063286892',
+          direccion: 'CALLE 38 31 A 10',
+          estado: 'ACTIVO',
+        },
+      ],
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Token faltante o inválido' })
+  @ApiForbiddenResponse({ description: 'Rol no autorizado' })
+  findAllActive() {
+    return this.service.findAllActive();
+  }
+
+  // ===========================
   // GET /sucursales
   // ===========================
   @Get()
@@ -43,7 +75,7 @@ export class SucursalesController {
   @ApiOperation({
     summary: 'Listar sucursales',
     description:
-      'Devuelve todas las sucursales registradas.',
+      'Devuelve todas las sucursales registradas (activas e inactivas).',
   })
   @ApiResponse({
     status: 200,
@@ -56,7 +88,7 @@ export class SucursalesController {
           codigo_comercio_redeban: '0063286892',
           codigo_referencia_banco: '0063286892',
           direccion: 'CALLE 38 31 A 10',
-          estado: 'ACTIVA',
+          estado: 'ACTIVO',
         },
       ],
     },
@@ -90,7 +122,7 @@ export class SucursalesController {
         codigo_comercio_redeban: '0063286892',
         codigo_referencia_banco: '0063286892',
         direccion: 'CALLE 38 31 A 10',
-        estado: 'ACTIVA',
+        estado: 'ACTIVO',
       },
     },
   })
@@ -153,7 +185,7 @@ export class SucursalesController {
       properties: {
         nombre: { type: 'string', example: 'CASA DEL KUMIS CENTRO (EDITADO)' },
         direccion: { type: 'string', example: 'Nueva dirección' },
-        estado: { type: 'string', example: 'ACTIVA' },
+        estado: { type: 'string', example: 'ACTIVO' },
       },
     },
   })
@@ -176,7 +208,7 @@ export class SucursalesController {
   @ApiOperation({
     summary: 'Desactivar sucursal',
     description:
-      'Marca la sucursal como INACTIVA. No borra datos ni afecta conciliaciones pasadas.',
+      'Marca la sucursal como INACTIVO. No borra datos ni afecta conciliaciones pasadas.',
   })
   @ApiParam({
     name: 'id',
