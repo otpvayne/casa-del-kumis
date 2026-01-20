@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
-import DashboardPage from "../pages/dashboard/DashboardPage";
+import DashboardPage from "../features/dashboard/pages/DashboardPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import UnauthorizedPage from "../pages/UnauthorizedPage";
 import AdminLayout from "../layouts/AdminLayout";
