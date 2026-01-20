@@ -6,7 +6,8 @@ import UnauthorizedPage from "../pages/UnauthorizedPage";
 import AdminLayout from "../layouts/AdminLayout";
 import { RequireAuth } from "../guards/RequireAuth";
 import { RequireRole } from "../guards/RequireRole";
-import BancoPage from "../pages/banco/BancoPage";
+import BancoPage from "../features/banco/pages/BancoPage";
+import BancoDetailPage from "../features/banco/pages/BancoDetailPage";
 import ConciliacionesPage from "../pages/conciliaciones/ConciliacionesPage";
 import ParametrosSistemaPage from "../pages/parametros/ParametrosPage";
 import RedeBanPage from "../pages/redeban/RedeBanPage";
@@ -65,7 +66,10 @@ export const router = createBrowserRouter([
             path: "/banco", 
             element: <BancoPage /> 
           },
-
+          { 
+            path: "/banco/:id", 
+            element: <BancoDetailPage /> 
+          },
           // ❌ Rutas RESTRINGIDAS - Solo ADMIN, PROPIETARIO, SOPORTE, DESARROLLADOR
           // (SIN OPERATIVO)
           {

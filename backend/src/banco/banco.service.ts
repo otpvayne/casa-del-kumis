@@ -194,6 +194,11 @@ export class BancoService {
         nombre_original: true,
         estado: true,
         created_at: true,
+        _count: {
+        select: {
+          registros_banco_detalle: true,
+        },
+      },
       } as any,
     });
     return this.serializeBigInt(rows);
@@ -485,4 +490,34 @@ export class BancoService {
   private serializeBigInt(obj: any) {
     return JSON.parse(JSON.stringify(obj, (_k, v) => (typeof v === 'bigint' ? v.toString() : v)));
   }
+  async deleteArchivoBanco(id: number) {
+  const archivo = await this.prisma.archivos_banco.findUnique({
+    where: { id: BigInt(id) as any } as any,
+  });
+
+  if (!archivo) {
+    throw new NotFoundException(`Archivo banco no encontrado: ${id}`);
+  }
+
+  // Eliminar registros detalle (cascade debería hacerlo automáticamente)
+  await this.prisma.registros_banco_detalle.deleteMany({
+    where: { archivo_banco_id: archivo.id } as any,
+  });
+
+  // Eliminar archivo
+  await this.prisma.archivos_banco.delete({
+    where: { id: archivo.id } as any,
+  });
+
+  // Opcional: eliminar archivo físico del disco
+  // const fs = require('fs');
+  // if (fs.existsSync(archivo.ruta_archivo)) {
+  //   fs.unlinkSync(archivo.ruta_archivo);
+  // }
+
+  return {
+    message: 'Archivo banco eliminado correctamente',
+    id: id.toString(),
+  };
+}
 }

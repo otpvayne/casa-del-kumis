@@ -6,6 +6,7 @@ import {
   ParseIntPipe,
   Post,
   Req,
+  Delete,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -175,4 +176,13 @@ export class BancoController {
   async getById(@Param('id', ParseIntPipe) id: number) {
     return this.bancoService.getArchivoBancoById(id);
   }
+  @Delete(':id')
+@Roles(Rol.ADMIN, Rol.PROPIETARIO)
+@ApiOperation({ summary: 'Eliminar archivo banco y sus registros' })
+@ApiParam({ name: 'id', type: Number })
+@ApiResponse({ status: 200, description: 'Archivo eliminado' })
+@ApiResponse({ status: 404, description: 'Archivo no encontrado' })
+async delete(@Param('id', ParseIntPipe) id: number) {
+  return this.bancoService.deleteArchivoBanco(id);
+}
 }
