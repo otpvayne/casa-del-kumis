@@ -129,13 +129,13 @@ export class BancoService {
       fecha_proceso: r.fecha_proceso,
       fecha_abono: r.fecha_abono,
 
-      bol_ruta: r.bol_ruta,
-      recap: r.recap,
-      vale: r.vale,
-      red: r.red,
+      bol_ruta: this.truncate(r.bol_ruta, 50),
+  recap: this.truncate(r.recap, 50),
+  vale: this.truncate(r.vale, 50),
+  red: this.truncate(r.red, 50),
 
-      terminal: r.terminal,
-      numero_autoriza: r.numero_autoriza,
+  terminal: this.truncate(r.terminal, 50),
+  numero_autoriza: this.truncate(r.numero_autoriza, 50),
 
       valor_consumo: r.valor_consumo,
       valor_iva: r.valor_iva,
@@ -148,9 +148,10 @@ export class BancoService {
       valor_neto: r.valor_neto,
       bases_dev_iva: r.bases_dev_iva,
 
-      hora_trans: r.hora_trans,
+      hora_trans: this.truncate(r.hora_trans, 20),
 
-      tarjeta_socio: r.tarjeta_socio,
+  tarjeta_socio: this.truncate(r.tarjeta_socio, 30),
+
       franquicia: r.franquicia,
       tipo_tarjeta: r.tipo_tarjeta,
     }));
@@ -504,20 +505,32 @@ export class BancoService {
     where: { archivo_banco_id: archivo.id } as any,
   });
 
-  // Eliminar archivo
+  // Eliminar archivo de la BD
   await this.prisma.archivos_banco.delete({
     where: { id: archivo.id } as any,
   });
 
-  // Opcional: eliminar archivo físico del disco
-  // const fs = require('fs');
-  // if (fs.existsSync(archivo.ruta_archivo)) {
-  //   fs.unlinkSync(archivo.ruta_archivo);
-  // }
+  // ✅ Eliminar archivo físico del disco
+  try {
+    if (fs.existsSync(archivo.ruta_archivo)) {
+      fs.unlinkSync(archivo.ruta_archivo);
+      console.log(`🗑️ Archivo físico eliminado: ${archivo.ruta_archivo}`);
+    }
+  } catch (err) {
+    console.warn(`⚠️ No se pudo eliminar el archivo físico: ${err}`);
+    // No lanzar error, ya se eliminó de la BD
+  }
 
   return {
     message: 'Archivo banco eliminado correctamente',
     id: id.toString(),
   };
+}
+/**
+ * Trunca un string a N caracteres máximo
+ */
+private truncate(value: string | null, maxLength: number): string | null {
+  if (!value) return null;
+  return value.length > maxLength ? value.substring(0, maxLength) : value;
 }
 }

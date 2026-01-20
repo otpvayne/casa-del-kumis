@@ -1,9 +1,30 @@
 import { useBanco } from "../hooks/useBanco";
 import { useNavigate } from "react-router-dom";
+import { deleteArchivoBanco } from "../api/banco.api";
+import { useState } from "react";
+import { Can } from "../../../components/Can";
 
 export default function BancoTable() {
   const { data, loading, error, reload } = useBanco();
   const navigate = useNavigate();
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  async function handleDelete(id: number, nombreArchivo: string) {
+    if (!confirm(`¿Eliminar archivo "${nombreArchivo}"?\n\n⚠️ ADVERTENCIA: Esto eliminará también todos los ${data.find(a => Number(a.id) === id)?._count?.registros_banco_detalle || 0} registros detallados asociados.\n\nEsta acción NO se puede deshacer.`)) {
+      return;
+    }
+
+    setDeletingId(id);
+    try {
+      await deleteArchivoBanco(id);
+      reload();
+    } catch (err: any) {
+      console.error("Error eliminando archivo:", err);
+      alert(err.response?.data?.message || "Error al eliminar el archivo");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   if (loading) {
     return (
@@ -112,12 +133,25 @@ export default function BancoTable() {
                   </td>
                   
                   <td className="p-4 text-right">
-                    <button
-                      onClick={() => navigate(`/banco/${archivo.id}`)}
-                      className="text-sky-400 hover:text-sky-300 transition text-sm font-medium"
-                    >
-                      Ver Detalles
-                    </button>
+                    <div className="flex items-center justify-end gap-3">
+                      <button
+                        onClick={() => navigate(`/banco/${archivo.id}`)}
+                        className="text-sky-400 hover:text-sky-300 transition text-sm font-medium"
+                      >
+                        Ver Detalles
+                      </button>
+                      
+                      {/* Solo ADMIN y PROPIETARIO pueden eliminar */}
+                      <Can roles={["ADMIN", "PROPIETARIO"]}>
+                        <button
+                          onClick={() => handleDelete(Number(archivo.id), archivo.nombre_original)}
+                          disabled={deletingId === Number(archivo.id)}
+                          className="text-red-500 hover:text-red-400 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {deletingId === Number(archivo.id) ? "Eliminando..." : "Eliminar"}
+                        </button>
+                      </Can>
+                    </div>
                   </td>
                 </tr>
               ))}

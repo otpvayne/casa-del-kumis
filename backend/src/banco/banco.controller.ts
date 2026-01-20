@@ -178,10 +178,29 @@ export class BancoController {
   }
   @Delete(':id')
 @Roles(Rol.ADMIN, Rol.PROPIETARIO)
-@ApiOperation({ summary: 'Eliminar archivo banco y sus registros' })
-@ApiParam({ name: 'id', type: Number })
-@ApiResponse({ status: 200, description: 'Archivo eliminado' })
+@ApiOperation({ 
+  summary: 'Eliminar archivo banco y sus registros',
+  description: 'Elimina permanentemente un archivo del banco y todos sus registros detallados. Solo ADMIN y PROPIETARIO.'
+})
+@ApiParam({ 
+  name: 'id', 
+  type: Number,
+  example: 2,
+  description: 'ID del archivo banco'
+})
+@ApiResponse({ 
+  status: 200, 
+  description: 'Archivo eliminado correctamente',
+  schema: {
+    example: {
+      message: 'Archivo banco eliminado correctamente',
+      id: '2'
+    }
+  }
+})
 @ApiResponse({ status: 404, description: 'Archivo no encontrado' })
+@ApiUnauthorizedResponse({ description: 'Falta token o token inválido' })
+@ApiForbiddenResponse({ description: 'Rol no autorizado' })
 async delete(@Param('id', ParseIntPipe) id: number) {
   return this.bancoService.deleteArchivoBanco(id);
 }
