@@ -202,7 +202,20 @@ export class RedeBanService {
     const items = await this.prisma.archivos_redeban.findMany({
       orderBy: { id: 'desc' } as any,
       take: 50,
-    });
+select: {
+      id: true,
+      nombre_original: true,
+      fecha_conciliacion: true,
+      estado: true,
+      created_at: true,
+      _count: {
+        select: {
+          registros_redeban: true,
+        },
+      },
+    } as any,
+  });
+   
 
     return this.serializeBigInt(items);
   }

@@ -10,12 +10,13 @@ import BancoPage from "../features/banco/pages/BancoPage";
 import BancoDetailPage from "../features/banco/pages/BancoDetailPage";
 import ConciliacionesPage from "../pages/conciliaciones/ConciliacionesPage";
 import ParametrosSistemaPage from "../pages/parametros/ParametrosPage";
-import RedeBanPage from "../pages/redeban/RedeBanPage";
+import RedeBanPage from "../features/redeban/pages/RedeBanListPage";
 import SucursalesPage from "../features/sucursales/pages/SucursalesPage";
 import UsersPage from "../features/users/pages/UsersPage";
 import VouchersListPage from "../features/vouchers/pages/VouchersListPage";
 import VoucherDetailPage from "../features/vouchers/pages/VoucherDetailPage";
 import CreateVoucherDraftPage from "../features/vouchers/pages/CreateVoucherDraftPage";
+import RedeBanDetailPage from "../features/redeban/pages/RedebanDetailPage";
 
 export const router = createBrowserRouter([
   // Páginas públicas
@@ -60,7 +61,10 @@ export const router = createBrowserRouter([
             path: "/redeban", 
             element: <RedeBanPage /> 
           },
-
+          { 
+            path: "/redeban/:id", 
+            element: <RedeBanDetailPage /> 
+          },
           // ✅ Banco - TODOS los roles (INCLUYE OPERATIVO)
           { 
             path: "/banco", 
