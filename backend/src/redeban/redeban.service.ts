@@ -14,13 +14,12 @@ type UploadRedeBanInput = {
 };
 
 type RedeBanParsedRow = {
-  // En el Excel "Comercio" viene: "0063286819  CASA DEL KUMIS VIVA"
   codigo_comercio: string; // 10 dígitos
   comercio_raw: string; // texto completo (debug)
   comercio_nombre: string | null; // texto después del código
 
-  direccion: string; // forzamos '' si viene vacío
-  cantidad_transacciones: number; // forzamos 0 si viene vacío
+  direccion: string;
+  cantidad_transacciones: number;
 
   valor_bruto: string;
   iva: string;
@@ -39,11 +38,11 @@ type RedeBanParsedRow = {
 
 @Injectable()
 export class RedeBanService {
-  constructor(private readonly prisma: PrismaService,private readonly logs: LogsService,) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logs: LogsService,
+  ) {}
 
-  // =====================================================
-  // ====================== UPLOAD =======================
-  // =====================================================
   async uploadAndProcess(input: UploadRedeBanInput) {
     const { file, fechaConciliacion, userId } = input;
 
@@ -53,15 +52,22 @@ export class RedeBanService {
     }
 
     const allowed = [
-      'application/vnd.ms-excel', // .xls
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     ];
     if (!allowed.includes(file.mimetype)) {
-      throw new BadRequestException('Formato no permitido. Usa XLS o XLSX (RedeBan).');
+      throw new BadRequestException(
+        'Formato no permitido. Usa XLS o XLSX (RedeBan).',
+      );
     }
 
     // 1) Guardar archivo ordenado por fecha
-    const destDir = path.join(process.cwd(), 'uploads', 'redeban', fechaConciliacion);
+    const destDir = path.join(
+      process.cwd(),
+      'uploads',
+      'redeban',
+      fechaConciliacion,
+    );
     fs.mkdirSync(destDir, { recursive: true });
 
     const finalPath = path.join(destDir, file.filename);
@@ -93,8 +99,12 @@ export class RedeBanService {
       } as any,
     });
 
-    // 5) Parsear excel (2 hojas: Portada + Movimientos)
-    let parsed: { sheetName: string; headerIndex: number; dataRows: RedeBanParsedRow[] };
+    // 5) Parsear excel
+    let parsed: {
+      sheetName: string;
+      headerIndex: number;
+      dataRows: RedeBanParsedRow[];
+    };
     try {
       parsed = this.parseRedeBanExcel(finalPath);
     } catch (e: any) {
@@ -105,8 +115,10 @@ export class RedeBanService {
       throw e;
     }
 
-    // 6) Resolver sucursal_id por codigo_comercio (NO queremos null)
-    const codigos = Array.from(new Set(parsed.dataRows.map((r) => r.codigo_comercio)));
+    // 6) Resolver sucursal_id por codigo_comercio
+    const codigos = Array.from(
+      new Set(parsed.dataRows.map((r) => r.codigo_comercio)),
+    );
 
     const sucursales = await this.prisma.sucursales.findMany({
       where: {
@@ -120,7 +132,10 @@ export class RedeBanService {
 
     const mapSucursal = new Map<string, bigint>();
     for (const s of sucursales as any[]) {
-      mapSucursal.set(String(s.codigo_comercio_redeban).trim(), s.id as bigint);
+      mapSucursal.set(
+        String(s.codigo_comercio_redeban).trim(),
+        s.id as bigint,
+      );
     }
 
     const faltantes = codigos.filter((c) => !mapSucursal.has(c));
@@ -136,41 +151,32 @@ export class RedeBanService {
       );
     }
 
-    // 7) Construir filas para DB (sin nulls en los que quieres obligatorios)
+    // 7) Construir filas para DB
     const rowsForDb = parsed.dataRows.map((r) => {
       const sucursalId = mapSucursal.get(r.codigo_comercio)!;
-
-      // ✅ Por si el Excel no trae dirección, usamos la de la sucursal (fallback)
-      // (Si no quieres esto, bórralo)
-      // NOTA: esto requiere una consulta extra si lo quisieras por cada fila.
-      // Para mantenerlo simple: dejamos dirección del Excel (o '').
 
       return {
         archivo_redeban_id: archivo.id,
         sucursal_id: sucursalId as any,
-
         codigo_comercio: r.codigo_comercio,
-
         direccion: (r.direccion ?? '').trim(),
-        cantidad_transacciones: Number.isFinite(r.cantidad_transacciones) ? r.cantidad_transacciones : 0,
-
+        cantidad_transacciones: Number.isFinite(r.cantidad_transacciones)
+          ? r.cantidad_transacciones
+          : 0,
         valor_bruto: r.valor_bruto ?? '0.00',
         iva: r.iva ?? '0.00',
         consumo: r.consumo ?? '0.00',
         tasa_aerop_propina: r.tasa_aerop_propina ?? '0.00',
-
         base_liquidacion: r.base_liquidacion ?? '0.00',
         comision: r.comision ?? '0.00',
-
         retefuente: r.retefuente ?? '0.00',
         rete_iva: r.rete_iva ?? '0.00',
         rete_ica: r.rete_ica ?? '0.00',
-
         neto: r.neto ?? '0.00',
       };
     });
 
-    // 8) Guardar registros (idempotente por archivo)
+    // 8) Guardar registros
     await this.prisma.registros_redeban.deleteMany({
       where: { archivo_redeban_id: archivo.id } as any,
     });
@@ -195,34 +201,27 @@ export class RedeBanService {
     });
   }
 
-  // =====================================================
-  // ===================== LIST ARCHIVOS =================
-  // =====================================================
   async listArchivos() {
     const items = await this.prisma.archivos_redeban.findMany({
       orderBy: { id: 'desc' } as any,
       take: 50,
-select: {
-      id: true,
-      nombre_original: true,
-      fecha_conciliacion: true,
-      estado: true,
-      created_at: true,
-      _count: {
-        select: {
-          registros_redeban: true,
+      select: {
+        id: true,
+        nombre_original: true,
+        fecha_conciliacion: true,
+        estado: true,
+        created_at: true,
+        _count: {
+          select: {
+            registros_redeban: true,
+          },
         },
-      },
-    } as any,
-  });
-   
+      } as any,
+    });
 
     return this.serializeBigInt(items);
   }
 
-  // =====================================================
-  // =================== GET ARCHIVO BY ID ===============
-  // =====================================================
   async getArchivoById(id: number) {
     const archivo = await this.prisma.archivos_redeban.findUnique({
       where: { id: BigInt(id) as any },
@@ -231,9 +230,41 @@ select: {
       } as any,
     });
 
-    if (!archivo) throw new BadRequestException('Archivo RedeBan no encontrado');
+    if (!archivo)
+      throw new BadRequestException('Archivo RedeBan no encontrado');
 
     return this.serializeBigInt(archivo);
+  }
+
+  async deleteArchivo(id: number, userId: number) {
+    const archivo = await this.prisma.archivos_redeban.findUnique({
+      where: { id: BigInt(id) as any },
+    } as any);
+
+    if (!archivo) {
+      throw new BadRequestException('Archivo RedeBan no encontrado');
+    }
+
+    await this.prisma.registros_redeban.deleteMany({
+      where: { archivo_redeban_id: archivo.id } as any,
+    });
+
+    await this.prisma.archivos_redeban.delete({
+      where: { id: archivo.id } as any,
+    } as any);
+
+    try {
+      if (archivo.ruta_archivo && fs.existsSync(archivo.ruta_archivo)) {
+        fs.unlinkSync(archivo.ruta_archivo);
+      }
+    } catch (e) {
+      // no rompemos el flujo
+    }
+
+    return this.serializeBigInt({
+      ok: true,
+      deletedId: archivo.id,
+    });
   }
 
   // =====================================================
@@ -262,19 +293,20 @@ select: {
       defval: '',
     }) as any;
 
-    if (!rows?.length) throw new BadRequestException('La hoja "Movimientos" está vacía.');
+    if (!rows?.length)
+      throw new BadRequestException('La hoja "Movimientos" está vacía.');
 
     const headerIndex = this.findHeaderRowIndex(rows);
     if (headerIndex === -1) {
       const preview = rows.slice(0, 20).map((r) => this.rowToHeaderString(r));
       throw new BadRequestException(
-        `No pude leer el archivo RedeBan: no encontré encabezado (Comercio / Cantidad de Transacciones).\nPreview:\n${preview.join('\n')}`,
+        `No pude leer el archivo RedeBan: no encontré encabezado (Dirección / Cantidad de Transacciones / Valor Bruto).\nPreview:\n${preview.join('\n')}`,
       );
     }
 
     const col = this.buildColumnMap(rows, headerIndex);
 
-    if (col.comercio === -1 || col.cantidad_transacciones === -1) {
+    if (col.direccion === -1 || col.cantidad_transacciones === -1) {
       throw new BadRequestException(
         `Encabezado detectado pero incompleto. ColumnMap=${JSON.stringify(col)}`,
       );
@@ -286,35 +318,59 @@ select: {
     for (let i = dataStart; i < rows.length; i++) {
       const row = rows[i] || [];
 
-      const comercioRaw = String(row[col.comercio] ?? '').trim();
-      if (!comercioRaw) {
-        const nonEmpty = row.some((c) => this.normalizeHeaderCell(c));
+      // 🔍 DEBUG: Ver qué hay en las primeras columnas
+      if (i === dataStart) {
+        console.log('📋 Primera fila de datos:', row.slice(0, 10));
+      }
+
+      // ⚠️ CORRECCIÓN: El código comercio está en la columna 0 (sin header)
+      // Y el nombre/dirección está en col.direccion (columna 1)
+      const codigoRaw = String(row[0] ?? '').trim();
+      const nombreRaw = String(row[col.direccion] ?? '').trim();
+
+      if (!codigoRaw) {
+        const nonEmpty = row.some((c) => String(c ?? '').trim());
         if (!nonEmpty) continue;
+        
+        // Si la fila tiene "TOTAL" o palabras similares, terminar
+        const joined = row.join(' ').toLowerCase();
+        if (joined.includes('total') || joined.includes('subtotal')) {
+          console.log('🛑 Encontrado total, terminando parsing');
+          break;
+        }
+        
         continue;
       }
 
-      // ✅ Extraer 10 dígitos
-      const { codigo10, nombre } = this.extractCodigoComercio10(comercioRaw);
-      if (!codigo10) continue;
+      // ✅ Extraer solo el código (10 dígitos)
+      const match = codigoRaw.match(/(\d{10})/);
+      if (!match) {
+        console.warn(`⚠️ Fila ${i}: no se pudo extraer código de "${codigoRaw}"`);
+        continue;
+      }
 
-      // ✅ Forzar defaults para que NO te queden null
-      const direccion =
-        col.direccion !== -1 ? String(row[col.direccion] ?? '').trim() : '';
-      const cantidadTx = this.parseIntSafe(row[col.cantidad_transacciones]) ?? 0;
+      const codigo10 = match[1];
 
-      const valorBruto = this.parseMoneyToDecimalString(row[col.valor_bruto]) ?? '0.00';
+      const cantidadTx =
+        this.parseIntSafe(row[col.cantidad_transacciones]) ?? 0;
+
+      const valorBruto =
+        this.parseMoneyToDecimalString(row[col.valor_bruto]) ?? '0.00';
       const iva = this.parseMoneyToDecimalString(row[col.iva]) ?? '0.00';
-      const consumo = this.parseMoneyToDecimalString(row[col.consumo]) ?? '0.00';
+      const consumo =
+        this.parseMoneyToDecimalString(row[col.consumo]) ?? '0.00';
 
       const tasaAeropPropina =
         col.tasa_aerop_propina !== -1
-          ? this.parseMoneyToDecimalString(row[col.tasa_aerop_propina]) ?? '0.00'
+          ? this.parseMoneyToDecimalString(row[col.tasa_aerop_propina]) ??
+            '0.00'
           : '0.00';
 
       const baseLiquidacion =
         this.parseMoneyToDecimalString(row[col.base_liquidacion]) ?? '0.00';
 
-      const comision = this.parseMoneyToDecimalString(row[col.comision]) ?? '0.00';
+      const comision =
+        this.parseMoneyToDecimalString(row[col.comision]) ?? '0.00';
 
       const retefuente =
         col.retefuente !== -1
@@ -334,28 +390,24 @@ select: {
 
       dataRows.push({
         codigo_comercio: codigo10,
-        comercio_raw: comercioRaw,
-        comercio_nombre: nombre,
-
-        direccion: direccion || '',
-
+        comercio_raw: codigoRaw,
+        comercio_nombre: nombreRaw || null,
+        direccion: nombreRaw || '',
         cantidad_transacciones: cantidadTx,
-
         valor_bruto: valorBruto,
         iva,
         consumo,
         tasa_aerop_propina: tasaAeropPropina,
-
         base_liquidacion: baseLiquidacion,
         comision,
-
         retefuente,
         rete_iva: reteIva,
         rete_ica: reteIca,
-
         neto,
       });
     }
+
+    console.log(`✅ Total filas parseadas: ${dataRows.length}`);
 
     if (dataRows.length === 0) {
       throw new BadRequestException(
@@ -366,8 +418,10 @@ select: {
     return { sheetName, headerIndex, dataRows };
   }
 
-  // ✅ extrae "0063286819" + "CASA DEL KUMIS VIVA"
-  private extractCodigoComercio10(raw: string): { codigo10: string | null; nombre: string | null } {
+  private extractCodigoComercio10(raw: string): {
+    codigo10: string | null;
+    nombre: string | null;
+  } {
     const cleaned = raw.replace(/\s+/g, ' ').trim();
 
     let m = cleaned.match(/^(\d{10})\s+(.*)$/);
@@ -385,7 +439,11 @@ select: {
 
   private pickMovimientosSheetName(sheetNames: string[]): string | null {
     const norm = (s: string) =>
-      s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      s
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
 
     const exact = sheetNames.find((n) => norm(n) === 'movimientos');
     if (exact) return exact;
@@ -398,9 +456,6 @@ select: {
     return null;
   }
 
-  // =====================================================
-  // ============ HEADER DETECTION (ROBUSTO) =============
-  // =====================================================
   private normalizeHeaderCell(v: any): string {
     return String(v ?? '')
       .trim()
@@ -423,13 +478,19 @@ select: {
       const r2 = this.rowToHeaderString(rows[i + 1] || []);
       const combined = `${r1} || ${r2}`;
 
-      const hasComercio = combined.includes('comercio');
+      const hasDireccion = combined.includes('direccion');
       const hasCantidadTx =
         combined.includes('cantidad de transacciones') ||
         (combined.includes('cantidad') && combined.includes('transacciones'));
+      const hasValorBruto = combined.includes('valor') && combined.includes('bruto');
 
-      if (hasComercio && hasCantidadTx) return i;
+      if (hasDireccion && hasCantidadTx && hasValorBruto) {
+        console.log(`✅ Header encontrado en fila ${i}`);
+        return i;
+      }
     }
+
+    console.warn('⚠️ No se encontró header con los patrones esperados');
     return -1;
   }
 
@@ -442,12 +503,24 @@ select: {
     for (let c = 0; c < maxLen; c++) {
       const h1 = this.normalizeHeaderCell(top[c]);
       const h2 = this.normalizeHeaderCell(bottom[c]);
-      const joined = [h1, h2].filter(Boolean).join(' ').trim();
-      headers.push(joined);
+
+      // Priorizar h2 (fila inferior) porque es más específica
+      if (h2) {
+        headers.push(h2);
+      } else if (h1) {
+        headers.push(h1);
+      } else {
+        headers.push('');
+      }
     }
 
-    const find = (patterns: RegExp[]) => {
-      for (let i = 0; i < headers.length; i++) {
+    console.log(
+      '🔍 Headers detectados:',
+      headers.slice(0, 15)
+    );
+
+    const findIndex = (patterns: RegExp[], startFrom = 0) => {
+      for (let i = startFrom; i < headers.length; i++) {
         const h = headers[i];
         if (!h) continue;
         if (patterns.some((p) => p.test(h))) return i;
@@ -455,26 +528,46 @@ select: {
       return -1;
     };
 
-    return {
-      comercio: find([/comercio/]),
-      direccion: find([/direccion/]),
-      cantidad_transacciones: find([/cantidad.*transacciones/, /transacciones/]),
-      valor_bruto: find([/valor.*bruto/]),
-      iva: find([/iva/]),
-      consumo: find([/consumo/]),
-      tasa_aerop_propina: find([/tasa.*aerop/, /propina/]),
-      base_liquidacion: find([/base.*liquidacion/]),
-      comision: find([/comision/]),
-      retefuente: find([/retefuente/, /retencion.*fuente/]),
-      rete_iva: find([/rete.*iva/]),
-      rete_ica: find([/rete.*ica/]),
-      neto: find([/neto/]),
+    const direccionIdx = findIndex([/direccion/]);
+    const cantidadIdx = findIndex([/cantidad.*transacciones/, /cantidad/]);
+    const valorBrutoIdx = findIndex([/valor.*bruto/]);
+    const ivaIdx = findIndex([/^iva$/]);
+    const consumoIdx = findIndex([/^consumo$/]);
+    const tasaIdx = findIndex([/tasa.*aerop/, /propina/]);
+    const baseLiquidacionIdx = findIndex([/base.*liquidacion/]);
+
+    // ⚠️ CRÍTICO: Comisión está DESPUÉS de Base de Liquidación
+    const comisionIdx =
+      baseLiquidacionIdx !== -1
+        ? findIndex([/^comision$/], baseLiquidacionIdx + 1)
+        : findIndex([/^comision$/]);
+
+    const retefuenteIdx = findIndex([/retefuente/, /retencion.*fuente/]);
+    const reteIvaIdx = findIndex([/rete.*iva/, /reteiva/]);
+    const reteIcaIdx = findIndex([/rete.*ica/, /reteica/]);
+    const netoIdx = findIndex([/^neto$/]);
+
+    const columnMap = {
+      comercio: 0, // ⚠️ Primera columna (índice 0) - NO tiene header
+      direccion: direccionIdx,
+      cantidad_transacciones: cantidadIdx,
+      valor_bruto: valorBrutoIdx,
+      iva: ivaIdx,
+      consumo: consumoIdx,
+      tasa_aerop_propina: tasaIdx,
+      base_liquidacion: baseLiquidacionIdx,
+      comision: comisionIdx,
+      retefuente: retefuenteIdx,
+      rete_iva: reteIvaIdx,
+      rete_ica: reteIcaIdx,
+      neto: netoIdx,
     };
+
+    console.log('🗺️ Column map:', columnMap);
+
+    return columnMap;
   }
 
-  // =====================================================
-  // =================== PARSERS =========================
-  // =====================================================
   private parseIntSafe(v: any): number | null {
     if (v === null || v === undefined) return null;
     if (typeof v === 'number' && Number.isFinite(v)) return Math.trunc(v);
@@ -484,10 +577,6 @@ select: {
     return Number.isFinite(n) ? n : null;
   }
 
-  /**
-   * Convierte: "$299.400" / "299.400" / "299400" / 299400 / "299.400,50"
-   * -> "299400.00"
-   */
   private parseMoneyToDecimalString(v: any): string | null {
     if (v === null || v === undefined) return null;
 
@@ -502,12 +591,14 @@ select: {
     s = s.replace(/[^\d\.\,\s-]/g, '').trim();
     if (!s) return null;
 
+    // Caso Colombia: "1.460.200,00" -> punto miles, coma decimal
     if (s.includes(',') && s.includes('.')) {
       s = s.replace(/\./g, '').replace(',', '.');
       const n = Number(s);
       return Number.isFinite(n) ? n.toFixed(2) : null;
     }
 
+    // Solo coma: puede ser decimal o miles
     if (s.includes(',') && !s.includes('.')) {
       const parts = s.split(',');
       if (parts.length === 2 && parts[1].length <= 2) {
@@ -519,6 +610,7 @@ select: {
       return Number.isFinite(n) ? n.toFixed(2) : null;
     }
 
+    // Solo punto: puede ser decimal o miles
     if (s.includes('.') && !s.includes(',')) {
       const parts = s.split('.');
       const last = parts[parts.length - 1];
@@ -533,45 +625,11 @@ select: {
     return Number.isFinite(n) ? n.toFixed(2) : null;
   }
 
-  // =====================================================
-  // =================== BIGINT SAFE =====================
-  // =====================================================
   private serializeBigInt(obj: any) {
     return JSON.parse(
-      JSON.stringify(obj, (_k, v) => (typeof v === 'bigint' ? v.toString() : v)),
+      JSON.stringify(obj, (_k, v) =>
+        typeof v === 'bigint' ? v.toString() : v,
+      ),
     );
   }
-  async deleteArchivo(id: number, userId: number) {
-  const archivo = await this.prisma.archivos_redeban.findUnique({
-    where: { id: BigInt(id) as any },
-  } as any);
-
-  if (!archivo) {
-    throw new BadRequestException('Archivo RedeBan no encontrado');
-  }
-
-  // borrar registros hijos
-  await this.prisma.registros_redeban.deleteMany({
-    where: { archivo_redeban_id: archivo.id } as any,
-  });
-
-  // borrar archivo padre
-  await this.prisma.archivos_redeban.delete({
-    where: { id: archivo.id } as any,
-  } as any);
-
-  // borrar archivo físico (si existe)
-  try {
-    if (archivo.ruta_archivo && fs.existsSync(archivo.ruta_archivo)) {
-      fs.unlinkSync(archivo.ruta_archivo);
-    }
-  } catch (e) {
-    // no rompemos el flujo por error de FS
-  }
-
-  return this.serializeBigInt({
-    ok: true,
-    deletedId: archivo.id,
-  });
-}
 }

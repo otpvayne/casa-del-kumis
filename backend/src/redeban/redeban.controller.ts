@@ -11,6 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
   Delete,
+  BadRequestException,
 } from '@nestjs/common';
 
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -23,8 +24,8 @@ import { Roles } from '../auth/roles.decorator';
 import { Rol } from '@prisma/client';
 
 import { RedeBanService } from './redeban.service';
+import { UploadRedebanDto } from './dto/upload-redeban.dto';
 
-// ✅ Swagger
 import {
   ApiBearerAuth,
   ApiBody,
@@ -58,6 +59,17 @@ export class RedeBanController {
         filename: filenameFactory,
       }),
       limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+      fileFilter: (_req, file, cb) => {
+        const allowed = [
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ];
+        if (allowed.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Solo se permiten archivos .xls o .xlsx'), false);
+        }
+      },
     }),
   )
   @ApiOperation({ summary: 'Subir y procesar archivo RedeBan (XLS/XLSX)' })
@@ -86,14 +98,18 @@ export class RedeBanController {
     description: 'Archivo cargado y procesado',
     schema: {
       example: {
-        id: '3',
-        fecha_conciliacion: '2025-12-22T00:00:00.000Z',
-        nombre_original: 'ReporteDiariodeVentasComercio2025-12-22.xls',
-        ruta_archivo: '.../uploads/redeban/2025-12-22/xxxx.xls',
-        hash_contenido: '3b3d...51d9',
-        estado: 'PROCESADO',
-        usuario_id: '1',
-        created_at: '2025-12-24T16:20:42.713Z',
+        archivo: {
+          id: '3',
+          fecha_conciliacion: '2025-12-22T00:00:00.000Z',
+          nombre_original: 'ReporteDiariodeVentasComercio2025-12-22.xls',
+          ruta_archivo: '.../uploads/redeban/2025-12-22/xxxx.xls',
+          hash_contenido: '3b3d...51d9',
+          estado: 'PROCESADO',
+          usuario_id: '1',
+          created_at: '2025-12-24T16:20:42.713Z',
+        },
+        totalFilas: 15,
+        sheetUsada: 'Movimientos',
       },
     },
   })
@@ -105,9 +121,13 @@ export class RedeBanController {
   @ApiForbiddenResponse({ description: 'Token válido pero rol no permitido' })
   async uploadRedeBan(
     @UploadedFile() file: Express.Multer.File,
-    @Body() body: { fechaConciliacion: string },
+    @Body() body: UploadRedebanDto,
     @Req() req: any,
   ) {
+    if (!file) {
+      throw new BadRequestException('Debes proporcionar un archivo');
+    }
+
     return this.redebanService.uploadAndProcess({
       file,
       fechaConciliacion: body.fechaConciliacion,
@@ -135,6 +155,9 @@ export class RedeBanController {
           nombre_original: 'ReporteDiariodeVentasComercio2025-12-22.xls',
           estado: 'PROCESADO',
           created_at: '2025-12-24T16:20:42.713Z',
+          _count: {
+            registros_redeban: 15,
+          },
         },
       ],
     },
@@ -169,7 +192,9 @@ export class RedeBanController {
 
   @Delete(':id')
   @Roles(Rol.ADMIN, Rol.PROPIETARIO, Rol.SOPORTE, Rol.DESARROLLADOR)
-  @ApiOperation({ summary: 'Eliminar un archivo RedeBan (y sus registros asociados)' })
+  @ApiOperation({
+    summary: 'Eliminar un archivo RedeBan (y sus registros asociados)',
+  })
   @ApiParam({ name: 'id', type: Number, example: 3 })
   @ApiResponse({
     status: 200,

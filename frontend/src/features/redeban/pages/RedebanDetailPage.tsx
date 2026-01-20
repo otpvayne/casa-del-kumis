@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { fetchRedeBanFile } from "../api/redeban.api";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { fetchRedeBanFile, deleteRedeBanFile } from "../api/redeban.api";
 import type { RedeBanDetail } from "../types";
 
 function formatMoney(n: string | number) {
@@ -24,22 +24,53 @@ function formatDate(dateStr: string | null | undefined): string {
 
 export default function RedeBanDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [data, setData] = useState<RedeBanDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function load() {
     if (!id) return;
     try {
       setLoading(true);
       setError(null);
-      const res = await fetchRedeBanFile(id); // id string OK
+      const res = await fetchRedeBanFile(id);
       setData(res);
     } catch (err: any) {
       console.error("Error cargando RedeBan:", err);
       setError(err?.response?.data?.message ?? err?.message ?? "Error al cargar los datos");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!data || !id) return;
+
+    const confirm = window.confirm(
+      `¿Estás seguro de eliminar este archivo?\n\n` +
+      `📄 ${data.nombre_original}\n` +
+      `📅 ${formatDate(data.fecha_conciliacion)}\n` +
+      `📊 ${totals.totalRegistros} registros\n\n` +
+      `Esta acción NO se puede deshacer y eliminará:\n` +
+      `• El archivo físico del servidor\n` +
+      `• Todos los registros asociados\n` +
+      `• El historial de procesamiento`
+    );
+
+    if (!confirm) return;
+
+    try {
+      setDeleting(true);
+      await deleteRedeBanFile(id);
+      alert(`✅ Archivo eliminado correctamente:\n${data.nombre_original}`);
+      navigate('/redeban'); // Redirigir a la lista
+    } catch (err: any) {
+      console.error('Error eliminando archivo:', err);
+      const msg = err?.response?.data?.message ?? err?.message ?? "Error desconocido";
+      alert(`❌ Error al eliminar: ${msg}`);
+      setDeleting(false);
     }
   }
 
@@ -99,9 +130,32 @@ export default function RedeBanDetailPage() {
           <p className="text-sm text-white/60 mt-1">{data.nombre_original}</p>
         </div>
 
-        <Link className="text-sm text-sky-300 hover:text-sky-200" to="/redeban">
-          ← Volver
-        </Link>
+        <div className="flex gap-3">
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="px-4 py-2 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
+          >
+            {deleting ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                </svg>
+                Eliminando...
+              </span>
+            ) : (
+              '🗑️ Eliminar Archivo'
+            )}
+          </button>
+          
+          <Link 
+            className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 transition font-medium text-sm"
+            to="/redeban"
+          >
+            ← Volver
+          </Link>
+        </div>
       </div>
 
       {/* Cards Totales */}
