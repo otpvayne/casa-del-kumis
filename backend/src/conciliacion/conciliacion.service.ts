@@ -824,5 +824,105 @@ archivo_banco_id: archivoBancoId ? (archivoBancoId as any) : null,
     topDiffComision,
   });
 }
+// =====================================================
+// ============== LISTAR CONCILIACIONES ================
+// =====================================================
+async listConciliaciones() {
+  const conciliaciones = await this.prisma.conciliaciones.findMany({
+    orderBy: { created_at: 'desc' } as any,
+    take: 100, // Últimas 100
+    include: {
+      sucursales: {
+        select: {
+          id: true,
+          nombre: true,
+          codigo_comercio_redeban: true,
+        },
+      },
+      _count: {
+        select: {
+          conciliacion_transacciones: true,
+        },
+      },
+    } as any,
+  });
 
+  return this.serializeBigInt(conciliaciones);
+}
+
+// =====================================================
+// ============ OBTENER CONCILIACIÓN POR ID ============
+// =====================================================
+async getConciliacionById(id: number) {
+  const conciliacion = await this.prisma.conciliaciones.findUnique({
+    where: { id: BigInt(id) as any },
+    include: {
+      sucursales: {
+        select: {
+          id: true,
+          nombre: true,
+          codigo_comercio_redeban: true,
+        },
+      },
+      vouchers: {
+        select: {
+          id: true,
+          fecha_operacion: true,
+          estado: true,
+        },
+      },
+      archivos_banco: {
+        select: {
+          id: true,
+          nombre_original: true,
+        },
+      },
+      archivos_redeban: {
+        select: {
+          id: true,
+          nombre_original: true,
+        },
+      },
+      _count: {
+        select: {
+          conciliacion_transacciones: true,
+        },
+      },
+    } as any,
+  });
+
+  if (!conciliacion) {
+    throw new NotFoundException(`Conciliación con ID ${id} no encontrada`);
+  }
+
+  return this.serializeBigInt(conciliacion);
+}
+
+// =====================================================
+// ============= ELIMINAR CONCILIACIÓN =================
+// =====================================================
+async deleteConciliacion(id: number, userId: number) {
+  const conciliacion = await this.prisma.conciliaciones.findUnique({
+    where: { id: BigInt(id) as any },
+  } as any);
+
+  if (!conciliacion) {
+    throw new NotFoundException(`Conciliación con ID ${id} no encontrada`);
+  }
+
+  // Eliminar transacciones hijas primero
+  await this.prisma.conciliacion_transacciones.deleteMany({
+    where: { conciliacion_id: BigInt(id) as any },
+  } as any);
+
+  // Eliminar conciliación
+  await this.prisma.conciliaciones.delete({
+    where: { id: BigInt(id) as any },
+  } as any);
+
+  return this.serializeBigInt({
+    ok: true,
+    deletedId: conciliacion.id,
+  });
+}
 }

@@ -9,6 +9,7 @@ import { RequireRole } from "../guards/RequireRole";
 import BancoPage from "../features/banco/pages/BancoPage";
 import BancoDetailPage from "../features/banco/pages/BancoDetailPage";
 import ConciliacionesPage from "../features/conciliaciones/pages/ConciliacionesPage";
+import ConciliacionesListPage from "../features/conciliaciones/pages/ConciliacionesListPage";
 import ConciliacionResumenPage from "../features/conciliaciones/pages/ConciliacionResumenPage";
 import ParametrosSistemaPage from "../pages/parametros/ParametrosPage";
 import RedeBanPage from "../features/redeban/pages/RedeBanListPage";
@@ -54,12 +55,17 @@ export const router = createBrowserRouter([
           // ✅ Conciliaciones - TODOS los roles
           { 
             path: "/conciliaciones", 
-            element: <ConciliacionesPage /> 
+            element: <ConciliacionesListPage /> // ✅ Lista como página principal
           },
-{ 
-            path: "/conciliaciones/id:/resumen", 
+          { 
+            path: "/conciliaciones/generar", 
+            element: <ConciliacionesPage /> // ✅ Formulario en ruta separada
+          },
+          { 
+            path: "/conciliaciones/:id/resumen", 
             element: <ConciliacionResumenPage /> 
           },
+
           // ✅ RedeBan - TODOS los roles (INCLUYE OPERATIVO)
           { 
             path: "/redeban", 
@@ -69,6 +75,7 @@ export const router = createBrowserRouter([
             path: "/redeban/:id", 
             element: <RedeBanDetailPage /> 
           },
+
           // ✅ Banco - TODOS los roles (INCLUYE OPERATIVO)
           { 
             path: "/banco", 
@@ -78,6 +85,7 @@ export const router = createBrowserRouter([
             path: "/banco/:id", 
             element: <BancoDetailPage /> 
           },
+
           // ❌ Rutas RESTRINGIDAS - Solo ADMIN, PROPIETARIO, SOPORTE, DESARROLLADOR
           // (SIN OPERATIVO)
           {

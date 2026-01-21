@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Post,
   Req,
+  Delete,
   UseGuards,
 } from '@nestjs/common';
 
@@ -205,4 +206,56 @@ export class ConciliacionController {
   async resumen(@Param('id', ParseIntPipe) id: number) {
     return this.conciliacionService.getResumen(id);
   }
+  // GET /conciliaciones
+@Get()
+@Roles(
+  Rol.OPERATIVO,
+  Rol.ADMIN,
+  Rol.PROPIETARIO,
+  Rol.SOPORTE,
+  Rol.DESARROLLADOR,
+)
+@ApiOperation({ summary: 'Listar todas las conciliaciones' })
+@ApiResponse({
+  status: 200,
+  description: 'Lista de conciliaciones',
+})
+@ApiUnauthorizedResponse({ description: 'Falta token o token inválido' })
+async list() {
+  return this.conciliacionService.listConciliaciones();
+}
+
+// GET /conciliaciones/:id
+@Get(':id')
+@Roles(
+  Rol.OPERATIVO,
+  Rol.ADMIN,
+  Rol.PROPIETARIO,
+  Rol.SOPORTE,
+  Rol.DESARROLLADOR,
+)
+@ApiOperation({ summary: 'Obtener conciliación por ID' })
+@ApiParam({ name: 'id', type: Number, example: 1 })
+@ApiResponse({ status: 200, description: 'Conciliación encontrada' })
+@ApiResponse({ status: 404, description: 'Conciliación no encontrada' })
+@ApiUnauthorizedResponse({ description: 'Falta token o token inválido' })
+async getById(@Param('id', ParseIntPipe) id: number) {
+  return this.conciliacionService.getConciliacionById(id);
+}
+
+// DELETE /conciliaciones/:id
+@Delete(':id')
+@Roles(Rol.ADMIN, Rol.PROPIETARIO, Rol.SOPORTE, Rol.DESARROLLADOR)
+@ApiOperation({ summary: 'Eliminar conciliación y sus transacciones' })
+@ApiParam({ name: 'id', type: Number, example: 1 })
+@ApiResponse({
+  status: 200,
+  description: 'Conciliación eliminada',
+})
+@ApiResponse({ status: 404, description: 'Conciliación no encontrada' })
+@ApiUnauthorizedResponse({ description: 'Falta token o token inválido' })
+@ApiForbiddenResponse({ description: 'Rol no permitido' })
+async delete(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+  return this.conciliacionService.deleteConciliacion(id, req.user.sub);
+}
 }
