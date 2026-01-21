@@ -8,7 +8,8 @@ import { RequireAuth } from "../guards/RequireAuth";
 import { RequireRole } from "../guards/RequireRole";
 import BancoPage from "../features/banco/pages/BancoPage";
 import BancoDetailPage from "../features/banco/pages/BancoDetailPage";
-import ConciliacionesPage from "../pages/conciliaciones/ConciliacionesPage";
+import ConciliacionesPage from "../features/conciliaciones/pages/ConciliacionesPage";
+import ConciliacionResumenPage from "../features/conciliaciones/pages/ConciliacionResumenPage";
 import ParametrosSistemaPage from "../pages/parametros/ParametrosPage";
 import RedeBanPage from "../features/redeban/pages/RedeBanListPage";
 import SucursalesPage from "../features/sucursales/pages/SucursalesPage";
@@ -55,7 +56,10 @@ export const router = createBrowserRouter([
             path: "/conciliaciones", 
             element: <ConciliacionesPage /> 
           },
-
+{ 
+            path: "/conciliaciones/id:/resumen", 
+            element: <ConciliacionResumenPage /> 
+          },
           // ✅ RedeBan - TODOS los roles (INCLUYE OPERATIVO)
           { 
             path: "/redeban", 
