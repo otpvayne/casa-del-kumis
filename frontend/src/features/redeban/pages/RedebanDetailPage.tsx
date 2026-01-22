@@ -145,7 +145,7 @@ export default function RedeBanDetailPage() {
                 Eliminando...
               </span>
             ) : (
-              '🗑️ Eliminar Archivo'
+              ' Eliminar Archivo'
             )}
           </button>
           

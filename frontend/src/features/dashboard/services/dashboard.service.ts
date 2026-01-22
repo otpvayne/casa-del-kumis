@@ -1,4 +1,4 @@
-import { api } from "../../../lib/api"; // usa el mismo api que vouchers
+import { api } from "../../../lib/api";
 
 export async function getDashboardData() {
   const { data } = await api.get("/dashboard");

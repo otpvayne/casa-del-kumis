@@ -131,7 +131,7 @@ export default function SucursalesPage() {
             onClick={() => openModal()}
             className="px-4 py-2 rounded-xl bg-sky-500 text-black font-semibold hover:bg-sky-400 transition"
           >
-            ➕ Nueva sucursal
+             Nueva sucursal
           </button>
         </Can>
       </div>

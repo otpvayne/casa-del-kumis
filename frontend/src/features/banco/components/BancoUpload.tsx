@@ -79,7 +79,7 @@ export default function BancoUpload({ onUploadSuccess }: Props) {
 
   return (
     <div className="rounded-xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-6">
-      <h2 className="text-lg font-semibold mb-4">📤 Cargar Archivo del Banco</h2>
+      <h2 className="text-lg font-semibold mb-4"> Cargar Archivo del Banco</h2>
       
       <p className="text-sm text-white/60 mb-4">
         Sube el archivo Excel (.xlsx/.xls) que contiene los registros bancarios detallados

@@ -45,7 +45,7 @@ export default function ParametrosCreateCard({ onCreated }: { onCreated: () => v
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 p-6">
-      <h2 className="text-lg font-semibold">➕ Crear nuevos parámetros</h2>
+      <h2 className="text-lg font-semibold"> Crear nuevos parámetros</h2>
       <p className="text-sm text-white/60 mt-1">
         Crea una nueva versión. Luego puedes activarla desde la tabla.
       </p>

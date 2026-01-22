@@ -118,14 +118,14 @@ export default function ConciliacionesListPage() {
             onClick={load}
             disabled={loading}
           >
-            {loading ? "Cargando..." : "🔄 Refrescar"}
+            {loading ? "Cargando..." : " Refrescar"}
           </button>
 
           <Link
             className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 transition font-medium text-sm text-black"
             to="/conciliaciones/generar"
           >
-            ➕ Nueva Conciliación
+             Nueva Conciliación
           </Link>
         </div>
       </div>

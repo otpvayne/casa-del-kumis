@@ -18,7 +18,7 @@ export default function ParametrosActiveCard({ active }: { active: ParametrosSis
     <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-emerald-200">✅ Parámetros activos</h2>
+          <h2 className="text-lg font-semibold text-emerald-200"> Parámetros activos</h2>
           <p className="text-sm text-white/60 mt-1">ID: {active.id}</p>
         </div>
 

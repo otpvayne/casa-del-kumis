@@ -19,7 +19,14 @@ export class DashboardController {
   constructor(private readonly service: DashboardService) {}
 
   @Get()
-  @Roles(Rol.PROPIETARIO, Rol.ADMIN, Rol.DESARROLLADOR, Rol.SOPORTE)
+  @Roles(
+  Rol.OPERATIVO,
+  Rol.PROPIETARIO,
+  Rol.ADMIN,
+  Rol.DESARROLLADOR,
+  Rol.SOPORTE,
+)
+
   @ApiOperation({
     summary: 'Obtener datos del dashboard',
     description: 'Estadísticas generales del sistema',
@@ -59,7 +66,14 @@ export class DashboardController {
   }
 
   @Get('stats/sucursales')
-  @Roles(Rol.PROPIETARIO, Rol.ADMIN, Rol.DESARROLLADOR, Rol.SOPORTE)
+ @Roles(
+  Rol.OPERATIVO,
+  Rol.PROPIETARIO,
+  Rol.ADMIN,
+  Rol.DESARROLLADOR,
+  Rol.SOPORTE,
+)
+
   @ApiOperation({
     summary: 'Estadísticas por sucursal',
   })

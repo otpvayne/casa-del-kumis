@@ -40,7 +40,7 @@ export default function RedeBanListPage() {
           onClick={load}
           disabled={loading}
         >
-          {loading ? 'Cargando...' : '🔄 Refrescar'}
+          {loading ? 'Cargando...' : ' Refrescar'}
         </button>
       </div>
 

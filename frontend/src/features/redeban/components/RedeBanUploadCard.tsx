@@ -90,7 +90,7 @@ export default function RedeBanUploadCard({ onUploaded }: { onUploaded: () => vo
   return (
     <div className="bg-white/5 border border-white/10 rounded-xl p-6">
       <div className="mb-4">
-        <h2 className="font-semibold text-lg">📤 Subir Archivo RedeBan</h2>
+        <h2 className="font-semibold text-lg"> Subir Archivo RedeBan</h2>
         <p className="text-sm text-white/60 mt-1">
           Sube el archivo de liquidación RedeBan (.xls o .xlsx) para procesar registros y usarlos en conciliación.
         </p>
