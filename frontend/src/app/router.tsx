@@ -11,7 +11,7 @@ import BancoDetailPage from "../features/banco/pages/BancoDetailPage";
 import ConciliacionesPage from "../features/conciliaciones/pages/ConciliacionesPage";
 import ConciliacionesListPage from "../features/conciliaciones/pages/ConciliacionesListPage";
 import ConciliacionResumenPage from "../features/conciliaciones/pages/ConciliacionResumenPage";
-import ParametrosSistemaPage from "../pages/parametros/ParametrosPage";
+import ParametrosListPage from "../features/parametros/pages/ParametrosListPage";
 import RedeBanPage from "../features/redeban/pages/RedeBanListPage";
 import SucursalesPage from "../features/sucursales/pages/SucursalesPage";
 import UsersPage from "../features/users/pages/UsersPage";
@@ -93,7 +93,7 @@ export const router = createBrowserRouter([
             children: [
               { path: "/sucursales", element: <SucursalesPage /> },
               { path: "/users", element: <UsersPage /> },
-              { path: "/parametros", element: <ParametrosSistemaPage /> },
+              { path: "/parametros", element: <ParametrosListPage /> },
             ],
           },
         ],

@@ -25,7 +25,6 @@ export default function AdminLayout() {
             <Link className="hover:text-white" to="/banco">Banco</Link>
             <Link className="hover:text-white" to="/sucursales">Sucursales</Link>
             <Link className="hover:text-white" to="/users">Usuarios</Link>
-            <Link className="hover:text-white" to="/logs">Logs</Link>
             <Link className="hover:text-white" to="/parametros">Parámetros</Link>
           </nav>
         </div>
