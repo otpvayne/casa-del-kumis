@@ -70,43 +70,116 @@ export type ConciliacionResumenResponse = {
   conciliacion: {
     id: string;
     sucursal_id: string;
+    sucursal_nombre?: string;
     fecha_ventas: string;
     estado: EstadoConciliacion;
     causa_principal?: string | null;
     diferencia_calculada?: string | number | null;
+    margen_permitido?: string | number | null;
     created_at?: string;
   };
-  conteoPorEstado: Record<EstadoConciliacionTx, number>;
-  sinBanco: Array<{
+  
+  // Nuevas secciones mejoradas
+  comparativa_totales: {
+    total_voucher: number;
+    total_banco_neto: number;
+    base_liquidacion_redeban: number;
+    neto_esperado_redeban: number;
+    diff_voucher_vs_banco: number;
+    diff_voucher_vs_redeban: number;
+    diff_banco_vs_redeban: number;
+    pct_diff_voucher_banco: number;
+    pct_diff_voucher_redeban: number;
+  };
+  
+  analisis_comisiones: {
+    comision_esperada_total: number;
+    comision_real_total: number;
+    diferencia_comision: number;
+    comision_promedio_por_tx: number;
+    comision_esperada_promedio_por_tx: number;
+    tasa_efectiva_real: number;
+    tasa_efectiva_esperada: number;
+    diferencia_tasa: number;
+    pct_comision_real_sobre_banco: number; // ✅ NUEVO
+    total_transacciones_con_comision: number;
+  };
+  
+  metricas_calidad: {
+    total_transacciones: number;
+    transacciones_conciliadas: number;
+    transacciones_con_problemas: number;
+    tasa_conciliacion_exitosa: number;
+    tasa_problemas: number;
+    calidad_general: "EXCELENTE" | "BUENA" | "REGULAR" | "MALA";
+  };
+  
+  desglose_por_franquicia: Record<string, {
+    cantidad: number;
+    monto_total_voucher: number;
+    monto_total_banco: number;
+    comision_total: number;
+  }>;
+  
+  conteo_por_estado: Record<EstadoConciliacionTx, number>;
+  
+  sin_banco: Array<{
     id: string;
     voucher_tx_id: string | null;
     ultimos_digitos: string | null;
     numero_recibo?: string | null;
-    monto_voucher?: string | number | null;
+    monto_voucher?: number;
+    franquicia?: string;
     observacion?: string | null;
-    estado: EstadoConciliacionTx;
   }>;
-  sinVoucher: Array<{
+  
+  sin_voucher: Array<{
     id: string;
     banco_detalle_id: string | null;
     ultimos_digitos: string | null;
     terminal?: string | null;
     numero_autoriza?: string | null;
-    valor_consumo_banco?: string | number | null;
-    valor_neto_banco?: string | number | null;
+    valor_consumo_banco?: number;
+    valor_neto_banco?: number;
+    franquicia?: string;
     observacion?: string | null;
-    estado: EstadoConciliacionTx;
   }>;
-  topDiffComision: Array<{
+  
+  top_diferencias_comision: Array<{
     id: string;
     estado?: EstadoConciliacionTx;
     ultimos_digitos: string | null;
+    franquicia?: string;
     diferencia_comision: number;
-    comision_esperada?: string | number | null;
-    comision_banco?: string | number | null;
+    comision_esperada?: number;
+    comision_banco?: number;
+    valor_consumo?: number;
     banco_detalle_id?: string | null;
     voucher_tx_id?: string | null;
   }>;
+  
+  archivos_fuente: {
+    voucher: {
+      id: string;
+      fecha_operacion: string;
+      estado: string;
+    } | null;
+    archivo_banco: {
+      id: string;
+      nombre: string;
+    } | null;
+    archivo_redeban: {
+      id: string;
+      nombre: string;
+    } | null;
+  };
+  
+  parametros_aplicados: {
+    tasa_comision: number;
+    tasa_comision_pct: number;
+    margen_error_permitido: number;
+    dias_desfase_banco: number;
+  };
 };
 
 export type Conciliacion = {

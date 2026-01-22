@@ -747,7 +747,9 @@ archivo_banco_id: archivoBancoId ? (archivoBancoId as any) : null,
       ),
     );
   }
-  async getResumen(id: number) {
+  // Reemplaza tu método getResumen() en conciliacion.service.ts con este:
+
+async getResumen(id: number) {
   const conc = await this.prisma.conciliaciones.findUnique({
     where: { id: BigInt(id) as any },
     include: {
@@ -775,9 +777,36 @@ archivo_banco_id: archivoBancoId ? (archivoBancoId as any) : null,
   // =====================================================
   // 2) COMPARATIVA DE TOTALES (Voucher vs Banco vs RedeBan)
   // =====================================================
-  const totalGlobalVoucher = this.decToNumber(conc.total_global_voucher);
-  const totalBancoAjustado = this.decToNumber(conc.total_banco_ajustado);
-  const baseLiquidacionRedeBan = this.decToNumber(conc.base_liquidacion_redeban);
+  let totalGlobalVoucher = this.decToNumber(conc.total_global_voucher);
+  let totalBancoAjustado = this.decToNumber(conc.total_banco_ajustado);
+  let baseLiquidacionRedeBan = this.decToNumber(conc.base_liquidacion_redeban);
+  
+  // ⚠️ Si los valores están en 0, intentar recalcular desde las transacciones
+  if (totalGlobalVoucher === 0 || totalBancoAjustado === 0) {
+    console.warn('⚠️ Totales en 0, recalculando desde transacciones...');
+    
+    // Recalcular desde transacciones
+    totalBancoAjustado = rows.reduce((sum: number, r: any) => {
+      return sum + this.decToNumber(r.valor_neto_banco);
+    }, 0);
+    
+    const montosVoucher = rows.reduce((sum: number, r: any) => {
+      return sum + this.decToNumber(r.monto_voucher);
+    }, 0);
+    
+    if (totalGlobalVoucher === 0) {
+      totalGlobalVoucher = montosVoucher;
+    }
+    
+    // Recalcular base liquidación desde transacciones
+    if (baseLiquidacionRedeBan === 0) {
+      baseLiquidacionRedeBan = rows.reduce((sum: number, r: any) => {
+        const consumo = this.decToNumber(r.valor_consumo_banco);
+        const imp = this.decToNumber(r.imp_al_consumo);
+        return sum + consumo + imp;
+      }, 0);
+    }
+  }
   
   // Obtener parámetros para calcular neto esperado RedeBan
   const params = await this.getParametrosSistema();
@@ -834,6 +863,11 @@ archivo_banco_id: archivoBancoId ? (archivoBancoId as any) : null,
   
   const tasaEfectivaEsperada = this.round2(params.tasa_comision * 100);
 
+  // ✅ NUEVO: Calcular porcentaje de comisión sobre total banco
+  const pctComisionRealSobreBanco = totalBancoAjustado > 0
+    ? this.round2((comisionRealTotal / (totalBancoAjustado + comisionRealTotal)) * 100)
+    : 0;
+
   const analisisComisiones = {
     comision_esperada_total: this.round2(comisionEsperadaTotal),
     comision_real_total: this.round2(comisionRealTotal),
@@ -845,6 +879,8 @@ archivo_banco_id: archivoBancoId ? (archivoBancoId as any) : null,
     tasa_efectiva_real: tasaEfectivaReal, // %
     tasa_efectiva_esperada: tasaEfectivaEsperada, // %
     diferencia_tasa: this.round2(Math.abs(tasaEfectivaReal - tasaEfectivaEsperada)),
+    
+    pct_comision_real_sobre_banco: pctComisionRealSobreBanco, // ✅ NUEVO
     
     total_transacciones_con_comision: transaccionesConBanco.length,
   };
@@ -968,65 +1004,65 @@ archivo_banco_id: archivoBancoId ? (archivoBancoId as any) : null,
     .slice(0, 20);
 
   // =====================================================
-  // 9) INFORMACIÓN DE ARCHIVOS FUENTE
-  // =====================================================
-  const archivosFuente = {
-    voucher: conc.vouchers ? {
-      id: String((conc.vouchers as any).id),
-      fecha_operacion: (conc.vouchers as any).fecha_operacion,
-      estado: (conc.vouchers as any).estado,
-    } : null,
-    
-    archivo_banco: conc.archivos_banco ? {
-      id: String((conc.archivos_banco as any).id),
-      nombre: (conc.archivos_banco as any).nombre_original,
-    } : null,
-    
-    archivo_redeban: conc.archivos_redeban ? {
-      id: String((conc.archivos_redeban as any).id),
-      nombre: (conc.archivos_redeban as any).nombre_original,
-    } : null,
-  };
+// 9) INFORMACIÓN DE ARCHIVOS FUENTE
+// =====================================================
+const archivosFuente = {
+  voucher: conc.vouchers ? {
+    id: String((conc.vouchers as any).id),
+    fecha_operacion: (conc.vouchers as any).fecha_operacion,
+    estado: (conc.vouchers as any).estado,
+  } : null,
+  
+  archivo_banco: conc.archivos_banco ? {
+    id: String((conc.archivos_banco as any).id),
+    nombre: (conc.archivos_banco as any).nombre_original,
+  } : null,
+  
+  archivo_redeban: conc.archivos_redeban ? {
+    id: String((conc.archivos_redeban as any).id),
+    nombre: (conc.archivos_redeban as any).nombre_original,
+  } : null,
+};
 
-  // =====================================================
-  // RESPUESTA COMPLETA
-  // =====================================================
-  return this.serializeBigInt({
-    conciliacion: {
-      id: conc.id,
-      sucursal_id: conc.sucursal_id,
-      sucursal_nombre: (conc.sucursales as any)?.nombre,
-      fecha_ventas: conc.fecha_ventas,
-      estado: conc.estado,
-      causa_principal: conc.causa_principal,
-      margen_permitido: this.decToNumber(conc.margen_permitido),
-      diferencia_calculada: this.decToNumber(conc.diferencia_calculada),
-      created_at: conc.created_at,
-    },
-    
-    // Nuevas secciones mejoradas
-    comparativa_totales: comparativaTotales,
-    analisis_comisiones: analisisComisiones,
-    metricas_calidad: metricsCalidad,
-    desglose_por_franquicia: porFranquicia,
-    
-    // Existentes
-    conteo_por_estado: conteoPorEstado,
-    sin_banco: sinBancoList,
-    sin_voucher: sinVoucherList,
-    top_diferencias_comision: topDiffComision,
-    
-    // Archivos fuente
-    archivos_fuente: archivosFuente,
-    
-    // Parámetros usados
-    parametros_aplicados: {
-      tasa_comision: params.tasa_comision,
-      tasa_comision_pct: this.round2(params.tasa_comision * 100),
-      margen_error_permitido: params.margen_error_permitido,
-      dias_desfase_banco: params.dias_desfase_banco,
-    },
-  });
+// =====================================================
+// RESPUESTA COMPLETA
+// =====================================================
+return this.serializeBigInt({
+  conciliacion: {
+    id: conc.id,
+    sucursal_id: conc.sucursal_id,
+    sucursal_nombre: (conc.sucursales as any)?.nombre,
+    fecha_ventas: conc.fecha_ventas,
+    estado: conc.estado,
+    causa_principal: conc.causa_principal,
+    margen_permitido: this.decToNumber(conc.margen_permitido),
+    diferencia_calculada: this.decToNumber(conc.diferencia_calculada),
+    created_at: conc.created_at,
+  },
+  
+  // Nuevas secciones mejoradas
+  comparativa_totales: comparativaTotales,
+  analisis_comisiones: analisisComisiones,
+  metricas_calidad: metricsCalidad,
+  desglose_por_franquicia: porFranquicia,
+  
+  // Existentes
+  conteo_por_estado: conteoPorEstado,
+  sin_banco: sinBancoList,
+  sin_voucher: sinVoucherList,
+  top_diferencias_comision: topDiffComision,
+  
+  // Archivos fuente
+  archivos_fuente: archivosFuente,
+  
+  // Parámetros usados
+  parametros_aplicados: {
+    tasa_comision: params.tasa_comision,
+    tasa_comision_pct: this.round2(params.tasa_comision * 100),
+    margen_error_permitido: params.margen_error_permitido,
+    dias_desfase_banco: params.dias_desfase_banco,
+  },
+});
 }
 // =====================================================
 // ============== LISTAR CONCILIACIONES ================

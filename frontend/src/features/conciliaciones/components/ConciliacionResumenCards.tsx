@@ -49,32 +49,15 @@ export default function ConciliacionResumenCards({
 }: {
   resumen: any;
 }) {
-  // ✅ CORRECCIÓN: Acceder correctamente a los datos
-  const comparativa = resumen?.comparativa_totales;
-  const comisiones = resumen?.analisis_comisiones;
-  const calidad = resumen?.metricas_calidad;
-  const params = resumen?.parametros_aplicados;
-  const franquicias = resumen?.desglose_por_franquicia;
-
-  // Debug en consola para verificar
-  console.log('📊 Datos recibidos en ConciliacionResumenCards:', {
-    comparativa,
-    comisiones,
-    calidad,
-  });
-
-  // Si no hay datos, mostrar mensaje
-  if (!comparativa || !comisiones || !calidad) {
-    return (
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
-        <p className="text-amber-300">⚠️ No hay datos de resumen disponibles</p>
-      </div>
-    );
-  }
+  const comparativa = resumen?.comparativa_totales ?? {};
+  const comisiones = resumen?.analisis_comisiones ?? {};
+  const calidad = resumen?.metricas_calidad ?? {};
+  const params = resumen?.parametros_aplicados ?? {};
+  const franquicias = resumen?.desglose_por_franquicia ?? {};
 
   // Determinar tono para diferencias
   const diffTone = (diff: number, margen: number) => {
-    const abs = Math.abs(diff || 0);
+    const abs = Math.abs(diff);
     if (abs <= margen) return "ok";
     if (abs <= margen * 2) return "warn";
     return "bad";
@@ -116,20 +99,10 @@ export default function ConciliacionResumenCards({
           <Card 
             label="Diff: Voucher vs Banco" 
             value={fmtMoney(comparativa.diff_voucher_vs_banco)} 
-            tone={diffTone(comparativa.diff_voucher_vs_banco, params?.margen_error_permitido || 50)}
+            tone={diffTone(comparativa.diff_voucher_vs_banco, params.margen_error_permitido)}
             subtitle={fmtPercent(comparativa.pct_diff_voucher_banco)}
           />
-          <Card 
-            label="Diff: Voucher vs RedeBan" 
-            value={fmtMoney(comparativa.diff_voucher_vs_redeban)} 
-            tone={diffTone(comparativa.diff_voucher_vs_redeban, params?.margen_error_permitido || 50)}
-            subtitle={fmtPercent(comparativa.pct_diff_voucher_redeban)}
-          />
-          <Card 
-            label="Diff: Banco vs RedeBan" 
-            value={fmtMoney(comparativa.diff_banco_vs_redeban)} 
-            tone={diffTone(comparativa.diff_banco_vs_redeban, params?.margen_error_permitido || 50)}
-          />
+          
         </div>
       </div>
 
@@ -147,12 +120,13 @@ export default function ConciliacionResumenCards({
           <Card 
             label="Comisión Real Total" 
             value={fmtMoney(comisiones.comision_real_total)} 
-            tone={comisiones.diferencia_comision > (params?.margen_error_permitido || 50) ? "warn" : "ok"}
+            tone={comisiones.diferencia_comision > params.margen_error_permitido ? "warn" : "ok"}
+            subtitle={`${fmtPercent(comisiones.pct_comision_real_sobre_banco)} del total banco`} 
           />
           <Card 
             label="Diferencia en Comisión" 
             value={fmtMoney(comisiones.diferencia_comision)} 
-            tone={comisiones.diferencia_comision > (params?.margen_error_permitido || 50) ? "bad" : "ok"}
+            tone={comisiones.diferencia_comision > params.margen_error_permitido ? "bad" : "ok"}
           />
           <Card 
             label="Tasa Efectiva Real" 
@@ -208,7 +182,7 @@ export default function ConciliacionResumenCards({
       </div>
 
       {/* Sección 4: Desglose por Franquicia */}
-      {franquicias && Object.keys(franquicias).length > 0 && (
+      {Object.keys(franquicias).length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-white/80 mb-3">
             💳 Desglose por Franquicia
@@ -220,7 +194,7 @@ export default function ConciliacionResumenCards({
                 className="rounded-xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-4"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-white">{franq}</span>
+                  <span className="text-sm font-semibold">{franq}</span>
                   <span className="text-xs text-white/60">{data.cantidad} tx</span>
                 </div>
                 <div className="space-y-1 text-xs">
@@ -244,24 +218,22 @@ export default function ConciliacionResumenCards({
       )}
 
       {/* Sección 5: Parámetros Aplicados */}
-      {params && (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-          <div className="text-sm font-semibold text-white/80 mb-3">
-            ⚙️ Parámetros Aplicados
-          </div>
-          <div className="flex flex-wrap gap-4 text-sm text-white/70">
-            <span>
-              <b>Tasa comisión:</b> {fmtPercent(params.tasa_comision_pct)}
-            </span>
-            <span>
-              <b>Margen error:</b> {fmtMoney(params.margen_error_permitido)}
-            </span>
-            <span>
-              <b>Días desfase banco:</b> {params.dias_desfase_banco}
-            </span>
-          </div>
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+        <div className="text-sm font-semibold text-white/80 mb-3">
+          ⚙️ Parámetros Aplicados
         </div>
-      )}
+        <div className="flex flex-wrap gap-4 text-sm text-white/70">
+          <span>
+            <b>Tasa comisión:</b> {fmtPercent(params.tasa_comision_pct)}
+          </span>
+          <span>
+            <b>Margen error:</b> {fmtMoney(params.margen_error_permitido)}
+          </span>
+          <span>
+            <b>Días desfase banco:</b> {params.dias_desfase_banco}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
