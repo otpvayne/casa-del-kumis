@@ -11,7 +11,7 @@ import { RedeBanModule } from './redeban/redeban.module';
 import { BancoModule } from './banco/banco.module';
 import { ConciliacionModule } from './conciliacion/conciliacion.module';
 import { ParametrosSistemaModule } from './parametros-sistema/parametros-sistema.module';
-import { LogsModule } from './logs/logs.module';
+
 import { DashboardModule } from './dashboard/dashboard.module';
 @Module({
   imports: [
@@ -24,7 +24,6 @@ import { DashboardModule } from './dashboard/dashboard.module';
     BancoModule,
     ConciliacionModule,
     ParametrosSistemaModule,
-    LogsModule,
     DashboardModule,
   ],
   controllers: [AppController],
