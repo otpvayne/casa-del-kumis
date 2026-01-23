@@ -42,22 +42,22 @@ async function bootstrap() {
   // ✅ CORS (Render + Vercel + local)
   // En Render agrega: CORS_ORIGIN=https://tu-frontend.vercel.app
   const corsOrigins = [
-    'http://localhost:5173',
-    'http://localhost:4173',
-    ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : []),
-  ].map(s => s.trim()).filter(Boolean);
+  'http://localhost:5173',
+  'http://localhost:4173',
+  ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : []),
+].map(s => s.trim()).filter(Boolean);
 
-  app.enableCors({
-    origin: (origin, cb) => {
-      // Permite requests sin origin (Postman/Swagger/cURL)
-      if (!origin) return cb(null, true);
-      if (corsOrigins.includes(origin)) return cb(null, true);
-      return cb(new Error(`CORS bloqueado para: ${origin}`), false);
-    },
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-  });
+app.enableCors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true); // Postman/Swagger
+    if (corsOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error(`CORS bloqueado para: ${origin}`), false);
+  },
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+});
+
 
   // ✅ SERVIR UPLOADS COMO ESTÁTICOS (ojo: en Render el disco es efímero)
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
