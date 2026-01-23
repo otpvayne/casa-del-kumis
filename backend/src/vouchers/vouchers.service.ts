@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import sharp from 'sharp';
 import { createWorker, PSM } from 'tesseract.js';
 import { ImageAnnotatorClient } from '@google-cloud/vision';
-import { LogsService } from '../logs/logs.service';
+
 
 type UploadAndProcessInput = {
   file: Express.Multer.File;
