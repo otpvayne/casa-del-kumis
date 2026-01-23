@@ -3,7 +3,7 @@ import { extname } from 'path';
 
 export const multerVoucherTmpConfig = {
   storage: diskStorage({
-    destination: './uploads/vouchers/tmp',
+    destination: '/tmp/uploads/vouchers/tmp',
     filename: (_req, file, cb) => {
       const ext = extname(file.originalname || '.jpg');
       const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;

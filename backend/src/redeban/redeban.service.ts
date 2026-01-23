@@ -62,12 +62,8 @@ export class RedeBanService {
     }
 
     // 1) Guardar archivo ordenado por fecha
-    const destDir = path.join(
-      process.cwd(),
-      'uploads',
-      'redeban',
-      fechaConciliacion,
-    );
+    const destDir = path.join('/tmp', 'uploads', 'redeban', fechaConciliacion);
+
     fs.mkdirSync(destDir, { recursive: true });
 
     const finalPath = path.join(destDir, file.filename);
@@ -192,6 +188,12 @@ export class RedeBanService {
       where: { id: archivo.id } as any,
       data: { estado: 'PROCESADO' } as any,
     });
+// ✅ Borrar archivo físico (en prod no se necesita guardarlo meses)
+try {
+  if (updated?.ruta_archivo) {
+    fs.unlinkSync(updated.ruta_archivo);
+  }
+} catch {}
 
     return this.serializeBigInt({
       archivo: updated,

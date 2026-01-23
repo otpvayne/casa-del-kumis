@@ -59,7 +59,7 @@ export class BancoController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads/banco',
+        destination: '/tmp/uploads/banco',
         filename: filenameFactory,
       }),
       limits: { fileSize: 25 * 1024 * 1024 },

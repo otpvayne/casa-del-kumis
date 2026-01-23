@@ -79,7 +79,7 @@ export class BancoService {
     }
 
     // guardar archivo por fecha/sucursal
-    const destDir = path.join(process.cwd(), 'uploads', 'banco', fechaArchivo, String(sucursalId));
+    const destDir = path.join('/tmp', 'uploads', 'banco', fechaArchivo, String(sucursalId));
     fs.mkdirSync(destDir, { recursive: true });
 
     const finalPath = path.join(destDir, file.filename);
@@ -172,6 +172,12 @@ export class BancoService {
       where: { id: archivo.id } as any,
       data: { estado: 'PROCESADO' } as any,
     });
+// ✅ Borrar archivo físico (en prod no se necesita guardarlo meses)
+try {
+  if (updated?.ruta_archivo) {
+    fs.unlinkSync(updated.ruta_archivo);
+  }
+} catch {}
 
     return this.serializeBigInt({
       archivo: updated,

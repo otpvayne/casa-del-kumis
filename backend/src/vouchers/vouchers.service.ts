@@ -96,13 +96,7 @@ export class VouchersService {
     if (!sucursal) throw new NotFoundException('Sucursal no existe');
 
     // 2) Guardar archivo ordenado por fecha/sucursal
-    const destDir = path.join(
-      process.cwd(),
-      'uploads',
-      'vouchers',
-      fechaOperacion,
-      String(sucursalId),
-    );
+    const destDir = path.join('/tmp', 'uploads', 'vouchers', fechaOperacion, String(sucursalId));
     fs.mkdirSync(destDir, { recursive: true });
 
     const finalPath = path.join(destDir, file.filename);

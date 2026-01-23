@@ -55,7 +55,7 @@ export class RedeBanController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads/redeban',
+        destination: '/tmp/uploads/redeban',
         filename: filenameFactory,
       }),
       limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
