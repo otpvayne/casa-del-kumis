@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as XLSX from 'xlsx';
-import { LogsService } from '../logs/logs.service';
+
 
 type UploadBancoInput = {
   file: Express.Multer.File;
@@ -50,7 +50,7 @@ type BancoParsedRow = {
 
 @Injectable()
 export class BancoService {
-  constructor(private readonly prisma: PrismaService,private readonly logs: LogsService,) {}
+  constructor(private readonly prisma: PrismaService,) {}
 
   // =========================
   // UPLOAD

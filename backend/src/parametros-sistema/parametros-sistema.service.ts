@@ -4,11 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../infra/db/prisma.service';
-import { LogsService } from '../logs/logs.service';
+
 
 @Injectable()
 export class ParametrosSistemaService {
-  constructor(private readonly prisma: PrismaService,private readonly logs: LogsService,) {}
+  constructor(private readonly prisma: PrismaService,) {}
 
   // ---------------------------
   // Helpers

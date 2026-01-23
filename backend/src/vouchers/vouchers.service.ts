@@ -67,10 +67,7 @@ type ParsedResult = {
 
 @Injectable()
 export class VouchersService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly logs: LogsService,
-  ) {}
+  constructor(private readonly prisma: PrismaService,) {}
 
   // =====================================================
   // =============== UPLOAD + OCR (LEGACY) ===============

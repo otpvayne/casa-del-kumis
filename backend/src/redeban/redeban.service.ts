@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as XLSX from 'xlsx';
-import { LogsService } from '../logs/logs.service';
+
 
 type UploadRedeBanInput = {
   file: Express.Multer.File;
@@ -38,10 +38,7 @@ type RedeBanParsedRow = {
 
 @Injectable()
 export class RedeBanService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly logs: LogsService,
-  ) {}
+  constructor(private readonly prisma: PrismaService,) {}
 
   async uploadAndProcess(input: UploadRedeBanInput) {
     const { file, fechaConciliacion, userId } = input;
