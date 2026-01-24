@@ -49,14 +49,20 @@ async function bootstrap() {
 
 app.enableCors({
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true); // Postman/Swagger
-    if (corsOrigins.includes(origin)) return cb(null, true);
+    if (!origin) return cb(null, true); // Postman/Swagger/cURL
+
+    const isAllowed =
+      corsOrigins.includes(origin) ||
+      origin.endsWith('.vercel.app'); // ✅ permite cualquier deploy de Vercel
+
+    if (isAllowed) return cb(null, true);
     return cb(new Error(`CORS bloqueado para: ${origin}`), false);
   },
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 });
+
 
 
   // ✅ SERVIR UPLOADS COMO ESTÁTICOS (ojo: en Render el disco es efímero)
