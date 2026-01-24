@@ -41,21 +41,18 @@ async function bootstrap() {
 
   // ✅ CORS (Render + Vercel + local)
   // En Render agrega: CORS_ORIGIN=https://tu-frontend.vercel.app
-  const corsOrigins = [
+ const corsOrigins = [
   'http://localhost:5173',
   'http://localhost:4173',
+  'https://casa-del-kumis.onrender.com', // ✅ permitir Swagger en prod
   ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : []),
 ].map(s => s.trim()).filter(Boolean);
 
 app.enableCors({
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true); // Postman/Swagger/cURL
-
-    const isAllowed =
-      corsOrigins.includes(origin) ||
-      origin.endsWith('.vercel.app'); // ✅ permite cualquier deploy de Vercel
-
-    if (isAllowed) return cb(null, true);
+    // Permite requests sin origin (Postman/Swagger/cURL)
+    if (!origin) return cb(null, true);
+    if (corsOrigins.includes(origin)) return cb(null, true);
     return cb(new Error(`CORS bloqueado para: ${origin}`), false);
   },
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
