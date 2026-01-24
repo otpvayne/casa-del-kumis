@@ -64,6 +64,21 @@ type ParsedResult = {
   totalGlobal: number | null;
   precision: number;
 };
+function safeMoveFile(src: string, dest: string) {
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+
+  try {
+    fs.renameSync(src, dest); // ✅ si es mismo disco
+  } catch (err: any) {
+    if (err?.code === 'EXDEV') {
+      // ✅ Render: /tmp -> /opt/... (discos distintos)
+      fs.copyFileSync(src, dest);
+      try { fs.unlinkSync(src); } catch {}
+      return;
+    }
+    throw err;
+  }
+}
 
 @Injectable()
 export class VouchersService {
@@ -97,7 +112,8 @@ export class VouchersService {
     fs.mkdirSync(destDir, { recursive: true });
 
     const finalPath = path.join(destDir, file.filename);
-    fs.renameSync(file.path, finalPath);
+    safeMoveFile(file.path, finalPath);
+
 
     // 3) Crear voucher en BD
     const voucher = await this.prisma.vouchers.create({
@@ -260,7 +276,8 @@ export class VouchersService {
     fs.mkdirSync(destDir, { recursive: true });
 
     const finalPath = path.join(destDir, file.filename);
-    fs.renameSync(file.path, finalPath);
+    safeMoveFile(file.path, finalPath);
+
 
     // Guardar voucher_imagenes
     const imgRow = await this.prisma.voucher_imagenes.create({
