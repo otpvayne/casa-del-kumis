@@ -44,7 +44,8 @@ async function bootstrap() {
  const corsOrigins = [
   'http://localhost:5173',
   'http://localhost:4173',
-  'https://casa-del-kumis.onrender.com', // ✅ permitir Swagger en prod
+  'https://casa-del-kumis.onrender.com',
+  'https://casa-del-kumis-5ch4dflrc-monkeys-projects-5b48c3b9.vercel.app', // ✅ permitir Swagger en prod
   ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : []),
 ].map(s => s.trim()).filter(Boolean);
 
