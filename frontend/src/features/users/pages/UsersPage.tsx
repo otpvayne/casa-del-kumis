@@ -46,7 +46,7 @@ export default function UsersPage() {
             }}
             className="px-4 py-2 rounded-xl bg-sky-500 text-black font-semibold hover:bg-sky-400 transition"
           >
-            ➕ Crear usuario
+             Crear usuario
           </button>
         </Can>
       </div>
