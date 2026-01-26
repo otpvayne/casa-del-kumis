@@ -55,6 +55,8 @@ export default function ConciliacionesListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [fechaPdf, setFechaPdf] = useState("");
+
 
   async function load() {
     try {
@@ -96,6 +98,30 @@ export default function ConciliacionesListPage() {
       setDeleting(null);
     }
   }
+async function handleExportPdf() {
+  if (!fechaPdf) return alert("Selecciona una fecha");
+
+  try {
+    const resp = await api.get(`/conciliaciones/export/pdf`, {
+      params: { fecha: fechaPdf },
+      responseType: "blob",
+    });
+
+    const blob = new Blob([resp.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `conciliaciones_${fechaPdf}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+  } catch (e: any) {
+    alert(e?.response?.data?.message ?? e?.message ?? "Error exportando PDF");
+  }
+}
 
   useEffect(() => {
     load();
@@ -112,23 +138,37 @@ export default function ConciliacionesListPage() {
           </p>
         </div>
 
-        <div className="flex gap-3">
-          <button
-            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 transition font-medium text-sm"
-            onClick={load}
-            disabled={loading}
-          >
-            {loading ? "Cargando..." : " Refrescar"}
-          </button>
+        <div className="flex gap-3 items-center">
+  <input
+    type="date"
+    value={fechaPdf}
+    onChange={(e) => setFechaPdf(e.target.value)}
+    className="px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-sm text-white"
+  />
 
-          <Link
-            className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 transition font-medium text-sm text-black"
-            to="/conciliaciones/generar"
-          >
-             Nueva Conciliación
-          </Link>
-        </div>
-      </div>
+  <button
+    onClick={handleExportPdf}
+    className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 transition font-medium text-sm text-black"
+  >
+    📄 Exportar PDF día
+  </button>
+
+  <button
+    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 transition font-medium text-sm"
+    onClick={load}
+    disabled={loading}
+  >
+    {loading ? "Cargando..." : "Refrescar"}
+  </button>
+
+  <Link
+    className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 transition font-medium text-sm text-black"
+    to="/conciliaciones/generar"
+  >
+    Nueva Conciliación
+  </Link>
+</div>
+</div>
 
       {/* Loading */}
       {loading && (

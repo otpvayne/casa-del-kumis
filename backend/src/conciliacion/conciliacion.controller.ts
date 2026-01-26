@@ -9,13 +9,15 @@ import {
   Req,
   Delete,
   UseGuards,
+  Query,
+  Res,
 } from '@nestjs/common';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Rol } from '@prisma/client';
-
+import type { Response } from 'express';
 import { ConciliacionService } from './conciliacion.service';
 import { GenerarConciliacionDto } from './dto/generar-conciliacion.dto';
 
@@ -133,6 +135,32 @@ export class ConciliacionController {
       force: Boolean(body.force),
     });
   }
+// GET /conciliaciones/export/pdf?fecha=YYYY-MM-DD
+@Get('export/pdf')
+@Roles(
+  Rol.OPERATIVO,
+  Rol.ADMIN,
+  Rol.PROPIETARIO,
+  Rol.SOPORTE,
+  Rol.DESARROLLADOR,
+)
+@ApiOperation({ summary: 'Exportar PDF diario (todas las sucursales en un solo documento)' })
+@ApiResponse({ status: 200, description: 'PDF generado' })
+@ApiUnauthorizedResponse({ description: 'Falta token o token inválido' })
+async exportPdfDia(
+  @Query('fecha') fecha: string,
+  @Res() res: Response,
+) {
+  const pdfBuffer = await this.conciliacionService.exportPdfDia(fecha);
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="conciliaciones_${fecha}.pdf"`,
+  );
+
+  return res.send(pdfBuffer);
+}
 
   // GET /conciliaciones/:id/resumen
   @Get(':id/resumen')

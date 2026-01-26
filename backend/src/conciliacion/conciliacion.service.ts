@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../infra/db/prisma.service';
+import { chromium } from 'playwright';
 
 
 type ParamsSistema = {
@@ -747,6 +748,192 @@ archivo_banco_id: archivoBancoId ? (archivoBancoId as any) : null,
       ),
     );
   }
+  async exportPdfDia(fechaVentas: string): Promise<Buffer> {
+  if (!fechaVentas) {
+    throw new BadRequestException('Falta query param "fecha" (YYYY-MM-DD)');
+  }
+
+  const fecha = this.parseDateOnly(fechaVentas);
+
+  // Trae todas las conciliaciones de ese día (todas las sucursales)
+  const conciliaciones = await this.prisma.conciliaciones.findMany({
+    where: { fecha_ventas: fecha } as any,
+    include: {
+      sucursales: { select: { id: true, nombre: true } },
+    } as any,
+    orderBy: { sucursal_id: 'asc' } as any,
+  });
+
+  if (!conciliaciones.length) {
+    throw new NotFoundException(
+      `No hay conciliaciones para la fecha ${fechaVentas}`,
+    );
+  }
+
+  // Para cada conciliación, reutilizamos tu resumen
+  const resumenes: Array<{
+  conciliacionId: string;
+  sucursalNombre: string;
+  data: any;
+}> = [];
+
+  for (const c of conciliaciones as any[]) {
+    const r = await this.getResumen(Number(c.id));
+    resumenes.push({
+      conciliacionId: String(c.id),
+      sucursalNombre: c?.sucursales?.nombre ?? `Sucursal ${String(c.sucursal_id)}`,
+      data: r,
+    });
+  }
+
+  const html = this.buildHtmlPdfDia({
+    fechaVentas,
+    resumenes,
+  });
+
+  // Render a PDF con Playwright
+  const browser = await chromium.launch({
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
+
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle' });
+
+    const pdf = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '18mm', right: '12mm', bottom: '18mm', left: '12mm' },
+    });
+
+    return Buffer.from(pdf);
+  } finally {
+    await browser.close();
+  }
+}
+
+private buildHtmlPdfDia(input: {
+  fechaVentas: string;
+  resumenes: Array<{
+    conciliacionId: string;
+    sucursalNombre: string;
+    data: any;
+  }>;
+}) {
+  const { fechaVentas, resumenes } = input;
+
+  const money = (n: any) => {
+    const num = typeof n === 'string' ? Number(n) : Number(n ?? 0);
+    return num.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const pct = (n: any) => {
+    const num = typeof n === 'string' ? Number(n) : Number(n ?? 0);
+    return `${num.toFixed(2)}%`;
+  };
+
+  const now = new Date().toLocaleString('es-CO');
+
+  const sections = resumenes.map((x) => {
+    const comp = x.data?.comparativa_totales ?? {};
+    const com = x.data?.analisis_comisiones ?? {};
+    const cal = x.data?.metricas_calidad ?? {};
+    const params = x.data?.parametros_aplicados ?? {};
+    const fuente = x.data?.archivos_fuente ?? {};
+
+    return `
+      <section class="card">
+        <div class="sec-head">
+          <h2>${x.sucursalNombre}</h2>
+          <div class="muted">Conciliación ID: ${x.conciliacionId}</div>
+        </div>
+
+        <h3>📊 Comparativa de Totales</h3>
+        <table class="tbl">
+          <tr><td>Total Voucher (Global)</td><td class="r">$ ${money(comp.total_voucher)}</td></tr>
+          <tr><td>Total Banco (Neto)</td><td class="r">$ ${money(comp.total_banco_neto)}</td></tr>
+          <tr><td>Neto Esperado RedeBan</td><td class="r">$ ${money(comp.neto_esperado_redeban)}</td></tr>
+          <tr><td>Base Liquidación RedeBan</td><td class="r">$ ${money(comp.base_liquidacion_redeban)}</td></tr>
+          <tr><td>Diff: Voucher vs Banco</td><td class="r">$ ${money(comp.diff_voucher_vs_banco)} (${pct(comp.pct_diff_voucher_banco)})</td></tr>
+        </table>
+
+        <h3>💰 Análisis de Comisiones</h3>
+        <table class="tbl">
+          <tr><td>Comisión Esperada Total</td><td class="r">$ ${money(com.comision_esperada_total)}</td></tr>
+          <tr><td>Comisión Real Total</td><td class="r">$ ${money(com.comision_real_total)} (${pct(com.pct_comision_real_sobre_banco)} del total banco)</td></tr>
+          <tr><td>Diferencia Comisión</td><td class="r">$ ${money(com.diferencia_comision)}</td></tr>
+          <tr><td>Tasa Efectiva Real</td><td class="r">${pct(com.tasa_efectiva_real)} (Esperada ${pct(com.tasa_efectiva_esperada)})</td></tr>
+          <tr><td>Total Tx con comisión</td><td class="r">${String(com.total_transacciones_con_comision ?? 0)}</td></tr>
+        </table>
+
+        <h3>✅ Métricas de Calidad</h3>
+        <table class="tbl">
+          <tr><td>Calidad General</td><td class="r">${String(cal.calidad_general ?? '—')}</td></tr>
+          <tr><td>Tasa conciliación exitosa</td><td class="r">${pct(cal.tasa_conciliacion_exitosa)}</td></tr>
+          <tr><td>Conciliadas</td><td class="r">${String(cal.transacciones_conciliadas ?? 0)} / ${String(cal.total_transacciones ?? 0)}</td></tr>
+          <tr><td>Con problemas</td><td class="r">${String(cal.transacciones_con_problemas ?? 0)} (${pct(cal.tasa_problemas)})</td></tr>
+        </table>
+
+        <h3>⚙️ Parámetros aplicados</h3>
+        <div class="pillrow">
+          <span class="pill">Tasa comisión: ${pct(params.tasa_comision_pct)}</span>
+          <span class="pill">Margen error: $ ${money(params.margen_error_permitido)}</span>
+          <span class="pill">Días desfase banco: ${String(params.dias_desfase_banco ?? 0)}</span>
+        </div>
+
+        <h3>📎 Archivos fuente</h3>
+        <table class="tbl">
+          <tr><td>Voucher</td><td class="r">${fuente?.voucher?.id ? `#${fuente.voucher.id}` : '—'}</td></tr>
+          <tr><td>Banco</td><td class="r">${fuente?.archivo_banco?.nombre ?? '—'}</td></tr>
+          <tr><td>RedeBan</td><td class="r">${fuente?.archivo_redeban?.nombre ?? '—'}</td></tr>
+        </table>
+      </section>
+    `;
+  }).join('\n');
+
+  return `
+  <!doctype html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <style>
+        body { font-family: Arial, sans-serif; color: #111; }
+        .header { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid #ddd; padding-bottom:10px; margin-bottom:14px;}
+        .title { font-size:18px; font-weight:700; }
+        .muted { color:#666; font-size:12px; }
+        .card { border:1px solid #e5e5e5; border-radius:10px; padding:12px 14px; margin: 0 0 14px 0; }
+        .sec-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
+        h2 { font-size:14px; margin:0; }
+        h3 { font-size:12px; margin:10px 0 6px; }
+        .tbl { width:100%; border-collapse:collapse; font-size:12px; }
+        .tbl td { padding:6px 8px; border-top:1px solid #f0f0f0; }
+        .tbl tr:first-child td { border-top:none; }
+        .r { text-align:right; font-variant-numeric: tabular-nums; }
+        .pillrow { display:flex; gap:8px; flex-wrap:wrap; }
+        .pill { display:inline-block; padding:6px 10px; border-radius:999px; border:1px solid #eaeaea; font-size:12px; background:#fafafa; }
+        .footer { margin-top:10px; font-size:11px; color:#666; }
+        @page { size: A4; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div>
+          <div class="title">Recuento diario de conciliaciones</div>
+          <div class="muted">Fecha de ventas: <b>${fechaVentas}</b> · Sucursales: ${resumenes.length}</div>
+        </div>
+        <div class="muted">Generado: ${now}</div>
+      </div>
+
+      ${sections}
+
+      <div class="footer">
+        Documento generado automáticamente por el sistema de conciliaciones.
+      </div>
+    </body>
+  </html>
+  `;
+}
+
   // Reemplaza tu método getResumen() en conciliacion.service.ts con este:
 
 async getResumen(id: number) {
