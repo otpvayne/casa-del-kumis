@@ -1,65 +1,106 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { api } from "../../../lib/api";
 
-type Props = {
-  images: {
-    id: string;
-    ruta_imagen: string;
-    orden: number;
-  }[];
+type VoucherImagen = {
+  id: string;
+  orden: number;
 };
 
-function toPublicUploadUrl(ruta: string) {
-  const normalized = ruta.replaceAll("\\", "/");
-  const idx = normalized.indexOf("/uploads/");
-  if (idx === -1) return "";
-  return `http://localhost:3000${normalized.slice(idx)}`;
-}
+export default function VoucherImageViewer({ images }: { images: VoucherImagen[] }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [imgUrl, setImgUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-export default function VoucherImageViewer({ images }: Props) {
-  const ordered = [...images].sort((a, b) => a.orden - b.orden);
-  const [zoomed, setZoomed] = useState<string | null>(null);
+  const ordered = useMemo(() => {
+    return [...(images || [])].sort((a, b) => a.orden - b.orden);
+  }, [images]);
 
-  if (ordered.length === 0) {
+  // auto seleccionar la primera
+  useEffect(() => {
+    if (!ordered.length) {
+      setSelectedId(null);
+      setImgUrl(null);
+      return;
+    }
+    setSelectedId((prev) => prev ?? ordered[0].id);
+  }, [ordered]);
+
+  // cargar blob cuando cambie selectedId
+  useEffect(() => {
+    let objectUrl: string | null = null;
+
+    async function load() {
+      if (!selectedId) return;
+      try {
+        setLoading(true);
+        setImgUrl(null);
+
+        const res = await api.get(`/vouchers/imagenes/${selectedId}/file`, {
+          responseType: "blob",
+        });
+
+        objectUrl = URL.createObjectURL(res.data);
+        setImgUrl(objectUrl);
+      } catch (e) {
+        console.error("Error cargando imagen voucher:", e);
+        setImgUrl(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [selectedId]);
+
+  if (!ordered.length) {
     return (
-      <div className="h-full flex items-center justify-center text-white/40 text-sm">
+      <div className="text-white/50 text-sm">
         No hay imágenes
       </div>
     );
   }
 
   return (
-    <>
-      {/* CONTENEDOR */}
-      <div className="h-full overflow-y-auto space-y-4 pr-2">
-        {ordered.map((img) => (
+    <div className="space-y-3">
+      {/* VISOR */}
+      <div className="bg-black/20 border border-white/10 rounded-xl p-2 h-[520px] flex items-center justify-center overflow-hidden">
+        {loading && <p className="text-white/50 text-sm">Cargando imagen...</p>}
+
+        {!loading && imgUrl && (
           <img
-            key={img.id}
-            src={toPublicUploadUrl(img.ruta_imagen)}
-            onClick={() => setZoomed(toPublicUploadUrl(img.ruta_imagen))}
-            className="
-              w-full 
-              object-contain 
-              rounded-lg 
-              border border-white/10 
-              cursor-zoom-in
-              hover:opacity-90
-            "
+            src={imgUrl}
+            alt="Voucher"
+            className="max-h-[500px] w-full object-contain rounded-lg"
           />
-        ))}
+        )}
+
+        {!loading && !imgUrl && (
+          <p className="text-red-300/80 text-sm">No se pudo cargar la imagen</p>
+        )}
       </div>
 
-      {/* ZOOM MODAL */}
-      {zoomed && (
-        <div
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6"
-          onClick={() => setZoomed(null)}
-        >
-          <img
-            src={zoomed}
-            className="max-h-full max-w-full object-contain cursor-zoom-out"
-          />
+      {/* THUMBNAILS */}
+      {ordered.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {ordered.map((img) => (
+            <button
+              key={img.id}
+              onClick={() => setSelectedId(img.id)}
+              className={`px-3 py-1 rounded-lg border text-xs whitespace-nowrap
+                ${selectedId === img.id
+                  ? "border-sky-400/60 bg-sky-400/10 text-sky-200"
+                  : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
+                }`}
+            >
+              Parte {img.orden}
+            </button>
+          ))}
         </div>
       )}
-    </>
+    </div>
   );
 }
