@@ -67,15 +67,20 @@ export default function VoucherImageViewer({ images }: { images: VoucherImagen[]
   return (
     <div className="space-y-3">
       {/* VISOR */}
-      <div className="bg-black/20 border border-white/10 rounded-xl p-2 h-[520px] flex items-center justify-center overflow-hidden">
+      <div className="bg-black/20 border border-white/10 rounded-xl p-2 h-[650px] flex items-center justify-center overflow-hidden">
         {loading && <p className="text-white/50 text-sm">Cargando imagen...</p>}
 
         {!loading && imgUrl && (
           <img
             src={imgUrl}
             alt="Voucher"
-            className="max-h-[500px] w-full object-contain rounded-lg"
-          />
+            className="
+    max-h-[640px] w-full object-contain rounded-lg
+    transition-transform duration-200 ease-out
+    hover:scale-[1.35]
+    cursor-zoom-in
+  "
+/>
         )}
 
         {!loading && !imgUrl && (
